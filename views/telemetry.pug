@@ -15,45 +15,20 @@ block content
                 div(role="tabpane", aria-labelledby="configuration-tab").tab-pane.panel#configuration
                     p s2
                 div(role="tabpane", aria-labelledby="mission-tab").tab-pane.panel#mission
-                    p s3
+                    lu#wayPointsList
+                        li.list-group-item#id1 way1
+                            button(type="button").btn.btn-danger.deleteWP -
+                        li.list-group-item#id2 way2
+                        li.list-group-item#id3 way3
+                        li.list-group-item#id4 way4
 
         div.col-md-9
             #mapdiv
 
-        script(type='text/javascript').
-            $(function () {
-                $('#tabs li:last-child a').tab('show')
-            })
-            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-                e.target // newly activated tab
-                e.relatedTarget // previous active tab
-            })
 
-            var map = L.map('mapdiv').setView([51.505, -0.09], 13);
-            L.tileLayer('http://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+        script(src='/js/libs/leaflet.js')
+        script(src='/js/libs/leaflet.movingRotatedMarker.js')
+        script(src='/js/libs/Sortable.min.js')
 
-            var curLocation = [0, 0];
-            // use below if you have a model
-            // var curLocation = [@Model.Location.Latitude, @Model.Location.Longitude];
-
-            if (curLocation[0] == 0 && curLocation[1] == 0) {
-                curLocation = [51.505, -0.09];
-            }
-
-            map.attributionControl.setPrefix(false);
-
-            var marker = new L.marker(curLocation, {
-                draggable: 'true'
-            });
-
-            marker.on('dragend', function(event) {
-                var position = marker.getLatLng();
-                marker.setLatLng(position, {
-                draggable: 'true'
-                }).bindPopup(position).update();
-                console.log(position);
-            });
-
-            map.addLayer(marker);
+        script(src='/js/panels.js')
+        script(src='/js/map.js')

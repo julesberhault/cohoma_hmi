@@ -1,9 +1,5 @@
-html {
-  height: 100%;
-}
-
 body {
-    height: 100%;
+    height: 100vh;
     padding: 40px 10px;
     background-color: #eee;
   }
@@ -63,15 +59,48 @@ body {
   .listing-table th:first-child {
     border-right: 1px solid #666;
   }
-  
-  .panel {
-    height: 800px;
+
+  .container-fluid {
+    height:100%;
+  }
+
+  .row {
+    height:95%;
+  }
+
+  .col-md-9{
+    height:100%;
+  }
+
+  #wayPointsList {
+    margin:10px;
   }
 
   #mapdiv {
-    height: 100%;
+    height:100%;
   }
 
-  .red {
-    background-color: brown;
-  }
+  .list-group-item {
+    transition-duration: .3s;
+    transition-property: background-color,color;
+    transition-timing-function: cubic-bezier(.4,0,.2,1);
+    background-color: #fff;
+    border: 0;
+    box-shadow: 0 0 2px 0 rgba(0,0,0,.14), 0 2px 2px 0 rgba(0,0,0,.12), 0 1px 3px 0 rgba(0,0,0,.2);
+    color: rgba(0,0,0,.87);
+    display: block;
+    font-size: .9375rem;
+    line-height: 1.428572;
+    min-height: 3rem;
+    padding: .830357rem 1.5rem;
+    position: relative;
+}
+
+.deleteWP {
+  float: right;
+
+  padding-top: 0px;
+  padding-right: 8px;
+  padding-bottom: 0px;
+  padding-left: 8px;
+}
