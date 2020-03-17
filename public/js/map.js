@@ -21,11 +21,14 @@ L.control.layers(baseLayers, overlays).addTo(map);
 map.attributionControl.setPrefix(false);
 
 
-var myMovingMarker = L.Marker.movingMarker([[48.370954, -4.480665]],
-    [1]).addTo(map);
+var myMovingMarker = new L.marker([48.370954, -4.480665]).addTo(map);
+/*
+m.slideTo([48.864433, 2.371324], {
+    duration: 3000
+});
 
-myMovingMarker.start();
-
+// or just set rotation with method
+m.setRotationAngle(65);*/
 /*
 var marker = new L.marker(curLocation, {
     draggable: 'true'
@@ -39,4 +42,4 @@ marker.on('dragend', function (event) {
     console.log(position);
 });*/
 
-map.addLayer(marker);
+//map.addLayer(marker);
