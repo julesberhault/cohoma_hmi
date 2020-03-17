@@ -4,7 +4,7 @@ const { check, validationResult } = require('express-validator');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    res.render('form', { title: 'Registration form' });
+    res.render('telemetry', { title: 'Telemetry' });
 });
 
 router.post('/',

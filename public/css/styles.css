@@ -1,4 +1,9 @@
+html {
+  height: 100%;
+}
+
 body {
+    height: 100%;
     padding: 40px 10px;
     background-color: #eee;
   }
@@ -57,4 +62,16 @@ body {
   .listing-table td:first-child,
   .listing-table th:first-child {
     border-right: 1px solid #666;
+  }
+  
+  .panel {
+    height: 800px;
+  }
+
+  #mapdiv {
+    height: 100%;
+  }
+
+  .red {
+    background-color: brown;
   }

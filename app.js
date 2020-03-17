@@ -29,7 +29,7 @@ io.on('connection', function (socket) {
 /*
 const attitude = new Attitude(JSONdata);
 attitude.save()
-  .then(() => { res.send('Thank you for your attitude!'); })
+  .then(() => { res.send(attitude); })
   .catch((err) => {
     console.log(err);
     res.send('Sorry! Something went wrong.');

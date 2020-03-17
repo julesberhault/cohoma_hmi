@@ -1,0 +1,59 @@
+extends layout
+block content
+    div.row
+        div.col-md-3
+            ul.nav.nav-pills#tabs
+                li.nav-item
+                    a(href="#stats", data-toggle="tab", aria-controls="stats", aria-selected="true").nav-link.active#stats-tab Stats
+                li.nav-item
+                    a(href="#configuration", data-toggle="tab", aria-controls="configuration", aria-selected="false").nav-link Configuration
+                li.nav-item
+                    a(href="#mission", data-toggle="tab", aria-controls="mission", aria-selected="false").nav-link Mission
+            div.tab-content
+                div(role="tabpane", aria-labelledby="stats-tab").tab-pane.panel.active#stats
+                    p s1
+                div(role="tabpane", aria-labelledby="configuration-tab").tab-pane.panel#configuration
+                    p s2
+                div(role="tabpane", aria-labelledby="mission-tab").tab-pane.panel#mission
+                    p s3
+
+        div.col-md-9
+            #mapdiv
+
+        script(type='text/javascript').
+            $(function () {
+                $('#tabs li:last-child a').tab('show')
+            })
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                e.target // newly activated tab
+                e.relatedTarget // previous active tab
+            })
+
+            var map = L.map('mapdiv').setView([51.505, -0.09], 13);
+            L.tileLayer('http://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            var curLocation = [0, 0];
+            // use below if you have a model
+            // var curLocation = [@Model.Location.Latitude, @Model.Location.Longitude];
+
+            if (curLocation[0] == 0 && curLocation[1] == 0) {
+                curLocation = [51.505, -0.09];
+            }
+
+            map.attributionControl.setPrefix(false);
+
+            var marker = new L.marker(curLocation, {
+                draggable: 'true'
+            });
+
+            marker.on('dragend', function(event) {
+                var position = marker.getLatLng();
+                marker.setLatLng(position, {
+                draggable: 'true'
+                }).bindPopup(position).update();
+                console.log(position);
+            });
+
+            map.addLayer(marker);
