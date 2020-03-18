@@ -1,12 +1,12 @@
-var waypoints = [];
 
 var socket = io.connect();
 
 socket.on('waypoints', function(wp){
     $('#newWPModal').modal('show');
     $("#updateSocketWP").click(function (event) {
-        waypoints = wp;
+        console.log(wp);
         $('#newWPModal').modal('hide');
+        updateWPList(wp);
     });
 });
 

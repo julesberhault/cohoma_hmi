@@ -35,15 +35,46 @@ var sortable = Sortable.create(el, {
     }
 });
 
+var wayPointsList = [
+    {
+        latlong: [48.370954, -4.480665],
+        id: "id1",
+        currid: 5
+    },
+    {
+        latlong: [48.380, -4.480665],
+        id: "id2",
+        currid: 5
+    },
+    {
+        latlong: [48.370954, -4.4850],
+        id: "id3",
+        currid: 5
+    },
+    {
+        latlong: [48.370954, -4.475],
+        id: "id4",
+        currid: 5
+    }
+];
+
 var currID = 5;
 
-$(".deleteWP").click(function (event) {
+var deleteWPf = function (event) {
+    var id = $(this).closest("li").attr("id");
+    wayPointsList.forEach(element => {
+        if(id==element.id){
+            map.removeLayer(element.marker);
+        }
+    });
     $(this).closest("li").remove();
-});
+};
+
+$(".deleteWP").click(deleteWPf);
 
 $(".addWP").click(function (event) {
     $("#wayPointsList").append(
-        '<li class="list-group-item" id="id'+ currID + '">Waypoint ' + currID + '<button class="btn btn-danger deleteWP" type="button">-</button></li>'
+        '<li class="list-group-item" id="id' + currID + '">Waypoint ' + currID + '<button class="btn btn-danger deleteWP" type="button">-</button></li>'
     );
 
     currID++;
@@ -54,8 +85,8 @@ $(".addWP").click(function (event) {
 
 $(".submitWP").click(function (event) {
     var wp = [];
-    $("#wayPointsList").each(function( index ) {
-        console.log( index + ": " + $( this ).text() );
+    $("#wayPointsList").each(function (index) {
+        console.log(index + ": " + $(this).text());
     });
 
     currID++;
@@ -63,7 +94,39 @@ $(".submitWP").click(function (event) {
         $(this).closest("li").remove();
     });
 });
+var posShow = function (position) {
+    return (Math.trunc(10000 * position.lat) / 10000 + ' : ' + Math.trunc(10000 * position.lng) / 10000)
+}
+var updateWPList = function (wps) {
+    //wps must contain an id and a latlong array at the bare minimum
+    wayPointsList = [];
+    wps.forEach(wp => {
+        var marker = new L.marker(wp.latlong, {
+            draggable: 'true'
+        });
+        marker.on('dragend', function (event) {
+            var position = marker.getLatLng();
+            marker.setLatLng(position, {
+                draggable: 'true'
+            }).update();
+            wp.latlong = position;
 
+            document.getElementById(wp.id).childNodes[0].nodeValue = posShow(position);
+
+        });
+        wp.marker = marker;
+        map.addLayer(marker);
+        wayPointsList.push(wp);
+    });
+    currID = wps.length;
+    $("#wayPointsList").empty();
+    wayPointsList.forEach(element => {
+        var position = element.marker.getLatLng();
+        $("#wayPointsList").append('<li class="list-group-item wpItem" id="' + element.id + '">' + posShow(position) + '<button class="btn btn-danger deleteWP" type="button">-</button></li>');
+    });
+    
+    $(".deleteWP").click(deleteWPf);
+}
 
 /*
 m.slideTo([48.864433, 2.371324], {
