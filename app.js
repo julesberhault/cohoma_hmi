@@ -23,32 +23,27 @@ module.exports = server;
 var waypoints = [
   {
     latlong: [48.370954, -4.480665],
-    id: "id1",
-    currid: 5
+    id: "id1"
   },
   {
     latlong: [48.380, -4.480665],
-    id: "id2",
-    currid: 5
+    id: "id2"
   },
   {
     latlong: [48.370954, -4.4850],
-    id: "id3",
-    currid: 5
+    id: "id3"
   },
   {
     latlong: [48.370954, -4.475],
-    id: "id4",
-    currid: 5
+    id: "id4"
   }
 ];
 var settings = [];
 
 io.on('connection', function (socket) {
   console.log("Some one connected !")
-  socket.emit('waypoints', waypoints);
 
-  socket.on('waypoints', function (data) {
+  socket.on('newMission', function (data) {
     waypoints = data; //sanitize here ?
     console.log(data);
     socket.broadcast.emit('waypoints', waypoints);

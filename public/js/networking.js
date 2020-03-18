@@ -7,9 +7,10 @@ socket.on('waypoints', function(wp){
         console.log(wp);
         $('#newWPModal').modal('hide');
         updateWPList(wp);
+        updatePath();
     });
 });
 
 var sendWaypoints = function(wp) {
-    socket.emit(wp);
+    socket.emit("newMission", wp);
 };

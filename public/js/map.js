@@ -22,8 +22,37 @@ overlays = {
 L.control.layers(baseLayers, overlays).addTo(map);
 map.attributionControl.setPrefix(false);
 
+var boatIcon = new L.Icon.Default();
+boatIcon.options.shadowSize = [0, 0];
+boatIcon.options.iconUrl = "boat_icon.png";
+var size = .6;
+boatIcon.options.iconAnchor = [30 * size, 60 * size];
+boatIcon.options.iconSize = [61 * size, 100 * size];
 
-var myMovingMarker = new L.marker([48.370954, -4.480665]).addTo(map);
+var myMovingMarker = new L.marker([48.370954, -4.480665], {
+    icon: boatIcon
+}).addTo(map);
+
+var addingWp = false;
+map.on('click', function (e) {
+    if (addingWp) {
+        var id = "id" + currID;
+        var latlong = e.latlng;
+
+        wayPointsList.push({
+            "latlong": [latlong.lat, latlong.lng],
+            "id": id
+        });
+
+        updateWPList(wayPointsList);
+        updatePath();
+
+        currID++;
+        $(".deleteWP").click(function (event) {
+            $(this).closest("li").remove();
+        });
+    }
+});
 
 // WP List machinery
 var el = document.getElementById('wayPointsList');
@@ -77,27 +106,35 @@ var deleteWPf = function (event) {
 
 $(".deleteWP").click(deleteWPf);
 
-$(".addWP").click(function (event) {
-    $("#wayPointsList").append(
-        '<li class="list-group-item" id="id' + currID + '">Waypoint ' + currID + '<button class="btn btn-danger deleteWP" type="button">-</button></li>'
-    );
+$('#addWPModal').collapse({
+    toggle: false
+});
 
-    currID++;
-    $(".deleteWP").click(function (event) {
-        $(this).closest("li").remove();
-    });
+$('#addWPCancel').click(function (event) {
+    addingWp = false;
+    console.log("cc");
+    $('#addWPModal').collapse('hide');    
+});
+
+$(".addWP").click(function (event) {
+    $('#addWPModal').collapse('show');
+    console.log("cc1");
+    addingWp = true;
 });
 
 $(".submitWP").click(function (event) {
-    var wp = [];
-    $("#wayPointsList").each(function (index) {
-        console.log(index + ": " + $(this).text());
+    var wp = []
+    var id = 0;
+
+    wayPointsList.forEach(element => {
+        wp.push({
+            "latlong": element.latlong,
+            "id": "id" + id
+        });
+        id++;
     });
 
-    currID++;
-    $(".deleteWP").click(function (event) {
-        $(this).closest("li").remove();
-    });
+    sendWaypoints(wp);
 });
 
 var posShow = function (position) {
@@ -107,32 +144,35 @@ var posShow = function (position) {
 var updateWPList = function (wps) {
     //wps must contain an id and a latlong array at the bare minimum
     wayPointsList.forEach(element => {
-        if(element.marker){
+        if (element.marker) {
             map.removeLayer(element.marker);
         }
     });
 
     wayPointsList = [];
     wps.forEach(wp => {
-        var marker = new L.marker(wp.latlong, {
-            draggable: 'true'
-        });
-        marker.on('dragend', function (event) {
-            var position = marker.getLatLng();
-            marker.setLatLng(position, {
+        console.log(wp);
+        if (!wp.marker) {
+            var marker = new L.marker(wp.latlong, {
                 draggable: 'true'
-            }).update();
-            wp.latlong = position;
+            });
+            marker.on('dragend', function (event) {
+                var position = marker.getLatLng();
+                marker.setLatLng(position, {
+                    draggable: 'true'
+                }).update();
+                wp.latlong = [position.lat, position.lng];
 
-            document.getElementById(wp.id).childNodes[0].nodeValue = posShow(position);
+                document.getElementById(wp.id).childNodes[0].nodeValue = posShow(position);
 
-            updatePath();
-        });
-        wp.marker = marker;
-        map.addLayer(marker);
+                updatePath();
+            });
+            wp.marker = marker;
+        }
+        map.addLayer(wp.marker);
         wayPointsList.push(wp);
     });
-    currID = wps.length;
+    currID = wps.length + 1;
     $("#wayPointsList").empty();
     wayPointsList.forEach(element => {
         var position = element.marker.getLatLng();

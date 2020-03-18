@@ -11,9 +11,14 @@ block content
                     button(type="button").btn.btn-danger.deleteWP -
                 li.list-group-item.wpItem#id4 Waypoint 4
                     button(type="button").btn.btn-danger.deleteWP -
-
-            .list-group-item#addElement Add a waypoint
-                button(type="button").btn.btn-primary.addWP +
+            lu
+                li.list-group-item#addElement Add a waypoint
+                    button(type="button").btn.btn-primary.addWP +
+                .collapse#addWPModal
+                    #modStyle
+                        a.text-center Click on the map to add waypoints
+                            button(type="button").btn.btn-secondary.btn-block#addWPCancel End
+                
 
             button(type="button").btn.btn-success.btn-block.submitWP Send mission
 
