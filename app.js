@@ -46,11 +46,12 @@ var settings = [];
 
 io.on('connection', function (socket) {
   console.log("Some one connected !")
-  socket.emit('waypoints', waypoints);
+  //socket.emit('waypoints', waypoints);
 
   socket.on('waypoints', function (data) {
     waypoints = data; //sanitize here ?
-    socket.emit('waypoints', waypoints);
+    console.log(data);
+    socket.broadcast.emit('waypoints', waypoints);
   });
 
 });

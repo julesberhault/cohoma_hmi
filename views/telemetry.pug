@@ -2,47 +2,12 @@ extends layout
 block content
     div.row
         div.col-md-3
-            ul.nav.nav-pills#tabs
-                li.nav-item
-                    a(href="#stats", data-toggle="tab", aria-controls="stats", aria-selected="true").nav-link.active#stats-tab Stats
-                li.nav-item
-                    a(href="#configuration", data-toggle="tab", aria-controls="configuration", aria-selected="false").nav-link Configuration
-                li.nav-item
-                    a(href="#mission", data-toggle="tab", aria-controls="mission", aria-selected="false").nav-link Mission
-            div.tab-content
-                div(role="tabpane", aria-labelledby="stats-tab").tab-pane.panel.active#stats
-                    .container
-                        .col-6
-                            canvas#compass
-                        .col-6
-                            canvas#speed
+            canvas(width="300", height="300")#compass
+        div.col-md-3
+            canvas(width="300", height="300")#speed
+        div.col-md-3
+        div.col-md-3
 
-                div(role="tabpane", aria-labelledby="configuration-tab").tab-pane.panel#configuration
-                    p s2
-                div(role="tabpane", aria-labelledby="mission-tab").tab-pane.panel#mission
-                    lu#wayPointsList
-                        li.list-group-item#id1 Waypoint 1
-                            button(type="button").btn.btn-danger.deleteWP -
-                        li.list-group-item#id2 Waypoint 2
-                            button(type="button").btn.btn-danger.deleteWP -
-                        li.list-group-item#id3 Waypoint 3
-                            button(type="button").btn.btn-danger.deleteWP -
-                        li.list-group-item#id4 Waypoint 4
-                            button(type="button").btn.btn-danger.deleteWP -
+    script(src='/js/libs/gauge.min.js')
 
-                    .list-group-item#addElement Add a waypoint
-                        button(type="button").btn.btn-primary.addWP +
-
-                    button(type="button").btn.btn-success.btn-block.submitWP Send mission
-
-        div.col-md-9
-            #mapdiv
-
-
-        script(src='/js/libs/leaflet.js')
-        script(src='/js/libs/leaflet.movingRotatedMarker.js')
-        script(src='/js/libs/Sortable.min.js')
-        script(src='/js/libs/gauge.min.js')
-
-        script(src='/js/panels.js')
-        script(src='/js/map.js')
+    script(src='/js/panels.js')

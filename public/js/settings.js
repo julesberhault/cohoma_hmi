@@ -1,0 +1,1 @@
+$("#navSettings").addClass("active")

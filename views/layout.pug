@@ -21,9 +21,17 @@ html
 
           .modal-footer
             button(type="button", data-dismiss="modal").btn.btn-secondary Keep my mission
-            button(type="button").btn.btn-primary Update my mission
+            button(type="button").btn.btn-primary#updateSocketWP Update my mission
+
+    nav.navbar.navbar-expand-lg.navbar-light.bg-light
+      a.navbar-brand(href='#') Sailboat telemetry
+      button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarNavAltMarkup', aria-controls='navbarNavAltMarkup', aria-expanded='false', aria-label='Toggle navigation')
+        span.navbar-toggler-icon
+      #navbarNavAltMarkup.collapse.navbar-collapse
+        .navbar-nav
+          a.nav-item.nav-link#navStats(href='/telemetry') Stats
+          a.nav-item.nav-link#navMission(href='/mission') Mission
+          a.nav-item.nav-link#navSettings(href='/settings') Configuration
 
     div.container-fluid
-        h1 Sailboat Telemetry
-
-        block content
+      block content
