@@ -35,6 +35,7 @@ var myMovingMarker = new L.marker([48.370954, -4.480665], {
 
 var addingWp = false;
 map.on('click', function (e) {
+    $('.wpItem.active').removeClass("active");
     if (addingWp) {
         var id = "id" + currID;
         var latlong = e.latlng;
@@ -102,7 +103,9 @@ var deleteWPf = function (event) {
     updatePath();
 };
 
-
+$('.col-md-3').click(function() {
+    $('.wpItem.active').removeClass("active");
+});
 
 $(".deleteWP").click(deleteWPf);
 
@@ -168,6 +171,11 @@ var updateWPList = function (wps) {
                 updatePath();
             });
             wp.marker = marker;
+
+            marker.on('click', function (event) {
+                $('.wpItem.active').removeClass("active");
+                $('#' + wp.id).addClass("active");
+            });
         }
         map.addLayer(wp.marker);
         wayPointsList.push(wp);

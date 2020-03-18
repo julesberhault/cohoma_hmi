@@ -2,6 +2,8 @@ $("#navStats").addClass("active")
 
 var compass = new RadialGauge({
     renderTo: 'compass',
+    width : 300,
+    height: 300,
     minValue: 0,
     maxValue: 360,
     majorTicks: [
@@ -50,31 +52,31 @@ var compass = new RadialGauge({
 
 var speed = new RadialGauge({
     renderTo: 'speed',
-    //width: 300,
-    //height: 300,
-    units: "Km/h",
+    width : 300,
+    height: 300,
+    units: "kt",
     minValue: 0,
-    maxValue: 220,
+    maxValue: 22,
     majorTicks: [
         "0",
+        "2",
+        "4",
+        "6",
+        "8",
+        "10",
+        "12",
+        "14",
+        "16",
+        "18",
         "20",
-        "40",
-        "60",
-        "80",
-        "100",
-        "120",
-        "140",
-        "160",
-        "180",
-        "200",
-        "220"
+        "22"
     ],
     minorTicks: 2,
     strokeTicks: true,
     highlights: [
         {
-            "from": 160,
-            "to": 220,
+            "from": 16,
+            "to": 22,
             "color": "rgba(200, 50, 50, .75)"
         }
     ],
