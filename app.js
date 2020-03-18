@@ -23,19 +23,19 @@ module.exports = server;
 var waypoints = [
   {
     latlong: [48.370954, -4.480665],
-    id: "id1"
+    id: "id0"
   },
   {
     latlong: [48.380, -4.480665],
-    id: "id2"
+    id: "id1"
   },
   {
     latlong: [48.370954, -4.4850],
-    id: "id3"
+    id: "id2"
   },
   {
     latlong: [48.370954, -4.475],
-    id: "id4"
+    id: "id3"
   }
 ];
 var settings = [];
@@ -47,6 +47,10 @@ io.on('connection', function (socket) {
     waypoints = data; //sanitize here ?
     console.log(data);
     socket.broadcast.emit('waypoints', waypoints);
+  });
+
+  socket.on('gimmeWP', function (data) {
+    socket.emit('yourWP', waypoints);
   });
 
 });

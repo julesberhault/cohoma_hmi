@@ -1,5 +1,15 @@
 $("#navMission").addClass("active")
 
+var wayPointsList = [];
+
+socket.on("yourWP", function(data) {
+    currID = data.length;
+    updateWPList(data);
+    updatePath();
+});
+socket.emit("gimmeWP");
+
+
 var baseMap = L.tileLayer('http://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 });
@@ -63,8 +73,6 @@ var swapArrayElements = function (arr, indexA, indexB) {
     arr[indexA] = arr[indexB];
     arr[indexB] = temp;
 };
-
-var wayPointsList = []
 
 var sortable = Sortable.create(el, {
     onEnd: function (evt) {
