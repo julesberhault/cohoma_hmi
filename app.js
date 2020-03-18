@@ -18,14 +18,44 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/', routes);
 app.use(express.static('public'));
 
-module.exports = app;
+module.exports = server;
+
+var waypoints = [
+  {
+    latlong: [48.370954, -4.480665],
+    id: "id1",
+    currid: 5
+  },
+  {
+    latlong: [48.380, -4.480665],
+    id: "id2",
+    currid: 5
+  },
+  {
+    latlong: [48.370954, -4.4850],
+    id: "id3",
+    currid: 5
+  },
+  {
+    latlong: [48.370954, -4.475],
+    id: "id4",
+    currid: 5
+  }
+];
+var settings = [];
 
 io.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
+  console.log("Some one connected !")
+  socket.emit('waypoints', waypoints);
+
+  socket.on('waypoints', function (data) {
+    waypoints = data; //sanitize here ?
+    socket.emit('waypoints', waypoints);
   });
+
 });
+
+
 /*
 const attitude = new Attitude(JSONdata);
 attitude.save()

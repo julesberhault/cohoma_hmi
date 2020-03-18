@@ -7,8 +7,22 @@ html
     link(rel='stylesheet', href='/css/leaflet.css')
     script(src='/js/libs/jquery-3.4.1.min.js')
     script(src='/js/libs/bootstrap.min.js')
+    script(src='/socket.io/socket.io.js')
+    script(src='/js/networking.js')
 
   body
+    div(aria-labelledby="newWPModal", aria-hidden="true", tabindex="-1", role="dialog").modal.fade#newWPModal
+      div(role="document").modal-dialog
+        .modal-content
+          .modal-header
+            h5.modal-title New mission notification
+
+          .modal-body A new mission has been uploaded to the server. Do you want to update yours accordingly ?
+
+          .modal-footer
+            button(type="button", data-dismiss="modal").btn.btn-secondary Keep my mission
+            button(type="button").btn.btn-primary Update my mission
+
     div.container-fluid
         h1 Sailboat Telemetry
 
