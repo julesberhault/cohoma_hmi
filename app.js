@@ -40,13 +40,13 @@ var waypoints = [
 ];
 var settings = [
   {
-    variable:"lDistance",
+    variable:"line_Distance",
     type: "int",
     value: 5,
     description: "Allowed distance to the line"
   },
   {
-    variable:"nogoZoneAngle",
+    variable:"tacking_Angle",
     type: "int",
     value: 35,
     description: "Minimum allowed tacking angle"
@@ -64,6 +64,10 @@ io.on('connection', function (socket) {
 
   socket.on('gimmeWP', function (data) {
     socket.emit('yourWP', waypoints);
+  });
+
+  socket.on('gimmeSettings', function (data) {
+    socket.emit('yourSettings', settings);
   });
 
 });

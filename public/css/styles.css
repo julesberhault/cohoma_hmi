@@ -149,3 +149,15 @@ ul {
   color: rgba(0,0,0,.87);
 
 }
+
+.inputSetting {
+  float: right;
+}
+
+#scrollable {
+  height: 85vh;
+}
+
+.gauge {
+  text-align: center;
+}

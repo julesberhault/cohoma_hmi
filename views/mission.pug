@@ -1,7 +1,7 @@
 extends layout
 block content
     div.row
-        div.col-md-3
+        div.col-md-3.overflow-auto#scrollable
             lu#wayPointsList
                 li.list-group-item.wpItem#id1 Waypoint 1
                     button(type="button").btn.btn-danger.deleteWP -
