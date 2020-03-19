@@ -91,6 +91,7 @@ var updatePath = function () {
         latlongs.push(element.latlong);
     });
     polyline.setLatLngs(latlongs);
+    decorator.setPaths(polyline);
 }
 
 var currID = 5;
@@ -162,7 +163,6 @@ var updateWPList = function (wps) {
 
     wayPointsList = [];
     wps.forEach(wp => {
-        console.log(wp);
         if (!wp.marker) {
             var marker = new L.marker(wp.latlong, {
                 draggable: 'true'
@@ -224,6 +224,12 @@ wayPointsList = [
 updateWPList(wayPointsList);
 
 var polyline = L.polyline([], { color: 'red' }).addTo(map);
+var decorator = L.polylineDecorator(polyline, {
+    patterns: [
+        // defines a pattern of 10px-wide dashes, repeated every 20px on the line
+        {offset: 0, repeat: 20, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+    ]
+}).addTo(map);
 
 updatePath();
 

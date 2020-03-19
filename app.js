@@ -38,7 +38,20 @@ var waypoints = [
     id: "id3"
   }
 ];
-var settings = [];
+var settings = [
+  {
+    variable:"lDistance",
+    type: "int",
+    value: 5,
+    description: "Allowed distance to the line"
+  },
+  {
+    variable:"nogoZoneAngle",
+    type: "int",
+    value: 35,
+    description: "Minimum allowed tacking angle"
+  },
+];
 
 io.on('connection', function (socket) {
   console.log("Some one connected !")
