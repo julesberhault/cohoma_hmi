@@ -70,6 +70,12 @@ io.on('connection', function (socket) {
     socket.emit('yourSettings', settings);
   });
 
+  socket.on('newSettings', function (data) {
+    settings = data; //sanitize here ?
+    console.log(data);
+    socket.broadcast.emit('settings', settings);
+  });
+
 });
 
 

@@ -2,14 +2,25 @@ $("#navMission").addClass("active")
 
 var wayPointsList = [];
 
+/// Socket.io
 socket.on("yourWP", function(data) {
     currID = data.length;
     updateWPList(data);
     updatePath();
 });
+
 socket.emit("gimmeWP");
 
+socket.on('waypoints', function(wp){
+    $('#newWPModal').modal('show');
+    $("#updateSocketWP").click(function (event) {
+        $('#newWPModal').modal('hide');
+        updateWPList(wp);
+        updatePath();
+    });
+});
 
+///Leaflet.js
 var baseMap = L.tileLayer('http://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 });
@@ -65,26 +76,6 @@ map.on('click', function (e) {
     }
 });
 
-// WP List machinery
-var el = document.getElementById('wayPointsList');
-
-var swapArrayElements = function (arr, indexA, indexB) {
-    var temp = arr[indexA];
-    arr[indexA] = arr[indexB];
-    arr[indexB] = temp;
-};
-
-var sortable = Sortable.create(el, {
-    onEnd: function (evt) {
-        var itemEl = evt.item;  // dragged HTMLElement
-        console.log(itemEl.id, evt.oldIndex, evt.newIndex);
-        swapArrayElements(wayPointsList, evt.oldIndex, evt.newIndex);
-        updatePath();
-    }
-});
-
-
-
 var updatePath = function () {
     var latlongs = [];
     wayPointsList.forEach(element => {
@@ -112,6 +103,25 @@ var deleteWPf = function (event) {
     updatePath();
 };
 
+///Bootstrap
+var el = document.getElementById('wayPointsList');
+
+var swapArrayElements = function (arr, indexA, indexB) {
+    var temp = arr[indexA];
+    arr[indexA] = arr[indexB];
+    arr[indexB] = temp;
+};
+
+var sortable = Sortable.create(el, {
+    onEnd: function (evt) {
+        var itemEl = evt.item;  // dragged HTMLElement
+        console.log(itemEl.id, evt.oldIndex, evt.newIndex);
+        swapArrayElements(wayPointsList, evt.oldIndex, evt.newIndex);
+        updatePath();
+    }
+});
+
+///JQuery
 $('.col-md-3').click(function() {
     $('.wpItem.active').removeClass("active");
 });
@@ -198,6 +208,8 @@ var updateWPList = function (wps) {
     $(".deleteWP").click(deleteWPf);
 }
 
+/// Initialize
+
 wayPointsList = [
     {
         latlong: [48.370954, -4.480665],
@@ -224,6 +236,7 @@ wayPointsList = [
 updateWPList(wayPointsList);
 
 var polyline = L.polyline([], { color: 'red' }).addTo(map);
+
 var decorator = L.polylineDecorator(polyline, {
     patterns: [
         // defines a pattern of 10px-wide dashes, repeated every 20px on the line

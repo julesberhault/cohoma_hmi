@@ -23,6 +23,20 @@ html
             button(type="button", data-dismiss="modal").btn.btn-secondary Keep my mission
             button(type="button").btn.btn-primary#updateSocketWP Update my mission
 
+
+    div(aria-labelledby="newSettingsModal", aria-hidden="true", tabindex="-1", role="dialog").modal.fade#newSettingsModal
+      div(role="document").modal-dialog
+        .modal-content
+          .modal-header
+            h5.modal-title New settings notification
+
+          .modal-body A new set of settings has been uploaded to the server. Do you want to update yours accordingly ?
+
+          .modal-footer
+            button(type="button", data-dismiss="modal").btn.btn-secondary Keep my settings
+            button(type="button").btn.btn-primary#updateSocketSettings Update my settings
+
+
     nav.navbar.navbar-expand-lg.navbar-light.bg-light
       a.navbar-brand(href='#') Sailboat telemetry
       button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarNavAltMarkup', aria-controls='navbarNavAltMarkup', aria-expanded='false', aria-label='Toggle navigation')
