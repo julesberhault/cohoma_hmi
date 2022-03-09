@@ -4,14 +4,6 @@ block content
     div.row
         div.col-md-3.overflow-auto#scrollable
             lu#wayPointsList
-                li.list-group-item.wpItem#id1 Waypoint 1
-                    button(type="button").btn.btn-danger.deleteWP -
-                li.list-group-item.wpItem#id2 Waypoint 2
-                    button(type="button").btn.btn-danger.deleteWP -
-                li.list-group-item.wpItem#id3 Waypoint 3
-                    button(type="button").btn.btn-danger.deleteWP -
-                li.list-group-item.wpItem#id4 Waypoint 4
-                    button(type="button").btn.btn-danger.deleteWP -
             lu
                 li.list-group-item#addElement Add a waypoint
                     button(type="button").btn.btn-primary.addWP +
@@ -32,5 +24,4 @@ block content
         script(src='/js/libs/leaflet.polylineDecorator.js')
         script(src='/js/libs/Sortable.min.js')
         script(src='/js/libs/gauge.min.js')
-
         script(src='/js/map.js')

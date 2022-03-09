@@ -1,35 +1,40 @@
 {
-  "name": "sailboat",
-  "version": "1.0.0",
-  "description": "Webserver to provide telemetry for our sailboat.",
-  "main": "app.js",
+  "name": "cohoma_hmi",
+  "version": "0.1.0",
+  "description": "Webserver to control Rover/Drone.",
+  "main": "launchs.js",
   "scripts": {
-    "watch": "nodemon ./start.js",
+    "watch": "nodemon ./launch.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Pafnouti/SailboatTelemetry.git"
+    "url": "git+https://github.com/julesberhault/cohoma_hmi.git"
   },
-  "author": "Corentin Lemoine",
+  "author": "Jules Berhault",
   "license": "GPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/Pafnouti/SailboatTelemetry/issues"
+    "url": "https://github.com/julesberhault/cohoma_hmi/issues"
   },
-  "homepage": "https://github.com/Pafnouti/SailboatTelemetry#readme",
+  "homepage": "https://github.com/julesberhault/cohoma_hmi#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "bootstrap": "^5.1.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "express-validator": "^6.4.0",
+    "express-validator": "^6.14.0",
     "html": "^1.0.0",
     "jquery": "^3.5.0",
-    "mongoose": "^5.9.4",
+    "leaflet": "^1.7.1",
+    "leaflet-marker-rotation": "^0.4.0",
+    "mongoose": "^5.13.14",
     "popper": "^1.0.1",
-    "pug": "^2.0.4",
-    "socket.io": "^2.3.0"
+    "pug": "^3.0.2",
+    "quaternion-to-euler": "^0.5.0",
+    "roslib": "^1.2.0",
+    "socket.io": "^2.4.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2"
+    "nodemon": "^2.0.15"
   }
 }

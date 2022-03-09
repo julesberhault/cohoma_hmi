@@ -1,0 +1,63 @@
+extends dashboard
+block content
+    .row.border-top.pt-2.pb-1
+        .col.px-2
+            div.btn-group.btn-block(role='group' aria-label='modeSelector')
+                label.btn.btn-outline-primary.my-0(for='navigationModeBtn' id='navigationModeLabel') #[input.btn-check(type='radio' name='mode' id='navigationModeBtn' autocomplete='off')] Navigation
+                label.btn.btn-outline-primary.my-0(for='explorationModeBtn' id='explorationModeLabel') #[input.btn-check(type='radio' name='mode' id='explorationModeBtn' autocomplete='off')] Exploration
+                label.btn.btn-outline-primary.my-0(for='tasksModeBtn' id='tasksModeLabel') #[input.btn-check(type='radio' name='mode' id='tasksModeBtn' autocomplete='off')] Tâches
+    .row.border-bottom.shadow.pb-1
+        .col.px-2
+            .collapse#navigationModeCollapse
+                .py-1
+                    button(type='button').btn.btn-secondary.btn-block#refreshMission Rafraichir mission
+                    ol.list-group.list-group-numbered.pt-1#waypointListGroup
+                    .collapse#addingWaypointCancelCollapse
+                        .pt-1
+                        .card.text-center.pt-1
+                            .card-title
+                                .card-text Cliquer sur la carte pour ajouter
+                                    .row.px-2.pt-1
+                                        .col.pr-1
+                                            button(type='button').btn.btn-danger.btn-block.disabled#clearWaypointList Effacer tout
+                                        .col.pl-1
+                                            button(type='button').btn.btn-success.btn-block#addWaypointCancel Terminer
+                    .collapse.show#addingWaypointCollapse
+                        .pt-1
+                            lu.list-group
+                                li.list-group-item.d-flex.justify-content-between.align-items-center#addElement Modifier l'itinéraire
+                                    button(type='button').btn.addingWaypointBtn
+                                        img(src='../css/images/plus.svg')
+                        .pt-1
+                            button(type='button').btn.btn-success.btn-block.disabled#submitWaypointList Envoyer mission
+            .collapse#explorationModeCollapse
+                .py-1
+                    .card.card-body
+                        | Exploration Mode
+            .collapse#tasksModeCollapse
+                .py-1
+                    .card.card-body
+                        | Tasks mode
+    .row.pt-2.pb-1
+        .col.px-2
+            label.btn.btn-outline-primary.btn-block.my-0(for='telemetryModeBtn' id='telemetryModeLabel') #[input.btn-check(type='radio' name='mode' id='telemetryModeBtn' autocomplete='off')] Télémétrie
+    .row.border-bottom.shadow.pb-1
+        .col.px-2
+            .collapse#telemetryModeCollapse
+                .pt-1
+                    .progress(style='height: 40px;')
+                        .progress-bar.bg-success.progress-bar-striped.progress-bar-animated(role='progressbar' style='width: 25%;' aria-valuenow='25' aria-valuemin='0' aria-valuemax='100')#battery Batterie
+                .pt-1
+                    img.img-fluid.rounded(id='videoStreamImg' src='../css/images/placeholder.png')
+                .pt-1
+                    .row.pr-2.remove-height
+                        .col-6
+                            canvas#compass
+                        .col-6
+                            canvas#velocity
+                    script(src='/js/telemetry.js')
+    .row.border-bottom.shadow.py-2
+        .col.px-2
+            button(type='button').btn.btn-outline-danger.btn-block#emergencyStop Arrêt d'urgence
+
+    script(src='/js/satellite1.js')

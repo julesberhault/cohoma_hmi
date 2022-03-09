@@ -1,29 +1,27 @@
 const express = require('express');
-const { check, validationResult } = require('express-validator');
-
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    res.render('telemetry', { title: 'Telemetry' });
-});
-router.get('/telemetry', (req, res) => {
-  res.render('telemetry', { title: 'Telemetry' });
+    res.render('dashboard', {});
 });
 
-router.get('/mission', (req, res) => {
-  res.render('mission', { title: 'Mission editor' });
+router.get('/dashboard', (req, res) => {
+    res.render('dashboard', { title: 'Dashboard' });
 });
-
-router.get('/settings', (req, res) => {
-  res.render('settings', { title: 'Configuration' });
+router.get('/general', (req, res) => {
+    res.render('general', { title: 'General' });
 });
-
-router.get('/attitude', (req, res) => {
-    Attitude.find()
-      .then((attitude) => {
-        res.send(attitude);
-      })
-      .catch(() => { res.send('Sorry! Something went wrong.'); });
-  });
+router.get('/satellite1', (req, res) => {
+    res.render('satellite1', { title: 'Satellite1' });
+});
+router.get('/satellite2', (req, res) => {
+    res.render('satellite2', { title: 'Satellite2' });
+});
+router.get('/satellite3', (req, res) => {
+    res.render('satellite3', { title: 'Satellite3' });
+});
+router.get('/satellite4', (req, res) => {
+    res.render('satellite4', { title: 'Satellite4' });
+});
 
 module.exports = router;

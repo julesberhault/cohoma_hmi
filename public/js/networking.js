@@ -1,6 +1,13 @@
-
 var socket = io.connect();
 
-var sendWaypoints = function(wp) {
-    socket.emit("newMission", wp);
+var sendWaypoint = function(newWaypointList) {
+    socket.emit("setWaypointList", newWaypointList);
+};
+
+var sendMode = function(newMode) {
+    socket.emit("setMode", newMode);
+};
+
+var sendCenteredLocation = function(newCenteredLocation) {
+    socket.emit("setCenteredLocation", newCenteredLocation);
 };

@@ -1,0 +1,42 @@
+doctype html
+html
+    head
+        block head
+            title= `${title}`
+            link(rel='icon', type='image/ico', href='/css/images/favicon.ico')
+            link(rel='stylesheet', href='/css/bootstrap.min.css')
+            link(rel='stylesheet', href='/css/styles.css')
+            link(rel='stylesheet', href='/css/leaflet.css')
+            link(rel='stylesheet', href='/css/sweetalert.css')
+            script(src='/js/libs/jquery-3.4.1.min.js')
+            script(src='/js/libs/bootstrap.min.js')
+            script(src='/js/libs/bootstrap.bundle.min.js')
+            script(src='/socket.io/socket.io.js')
+            script(src='/js/libs/roslib.min.js')
+            script(src='/js/libs/sweetalert.min.js')
+            script(src='/js/libs/leaflet.js')
+            script(src='/js/libs/leaflet.movingRotatedMarker.js')
+            script(src='/js/libs/leaflet.polylineDecorator.js')
+            script(src='/js/libs/Sortable.min.js')
+            script(src='/js/libs/gauge.min.js')
+            script(src='/js/networking.js')
+            | <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    body
+        | <header class="navbar navbar-expand navbar-dark justify-content-center fixed-top bg-light">
+        |   <ul class="nav nav-pills nav-fill">
+        |       <li class="nav-item"><a href="/general" id="navGeneral" class="nav-link mr-2" aria-current="page">General</a></li>
+        |       <li class="nav-item"><a href="/satellite1" id="navSatellite1" class="nav-link mr-2">Satellite I</a></li>
+        |       <li class="nav-item"><a href="/satellite2" id="navSatellite2" class="nav-link mr-2 disabled">Satellite II</a></li>
+        |       <li class="nav-item"><a href="/satellite3" id="navSatellite3" class="nav-link mr-2">Satellite III</a></li>
+        |       <li class="nav-item"><a href="/satellite4" id="navSatellite4" class="nav-link disabled">Satellite VI</a></li>
+        |   </ul>
+        | </header>
+        div.container-fluid.overflow-hidden.bg-white.pt-5
+            div.row.flex-xl-nowrap.pt-2
+                div.col-12.col-md-9.bd-content.px-0.order-last
+                    #mapdiv.py-0
+                    script(src='/js/dashboard.js')
+                main.col-12.col-md-3.px-0.bd-sidebar.order-first.overflow-auto#scrollable
+                    div.container
+                        block content
