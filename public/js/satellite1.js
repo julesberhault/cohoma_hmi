@@ -6,6 +6,8 @@ var waypointList = [];
 var mode;
 var addingWaypoint = false;
 var currID = 0;
+var cameraDisplay = false;
+var missionLaunched = false;
 
 /// Socket.io | Recover mission
 
@@ -26,7 +28,84 @@ socket.on("currentWaypointList", function(currentWaypointList) {
     updatePath();
 });
 
-// Mode selection Navigation | Exploration | Tasks
+/// ROS
+
+var velocityListener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/husky_velocity_controller/odom',
+    messageType : 'nav_msgs/Odometry'
+});
+
+velocityListener.subscribe(function(message) {
+    let velocity_kmh = 3.6 * message.twist.twist.linear.x;
+    velocity.value = Math.abs(velocity_kmh.toFixed(2));
+});
+
+var videoStreamListener = new ROSLIB.Topic({
+    ros: ros,
+    name: '/realsense/color/image_raw/compressed',
+    messageType: 'sensor_msgs/CompressedImage'
+});
+
+videoStreamListener.subscribe(function(message) {
+    document.getElementById('videoStreamImg').src = "data:image/jpg;base64," + message.data;
+});
+
+$('#displayCameraBtn:input').change(function () {
+    if (cameraDisplay)
+    {
+        $('#displayCameraLabel').removeClass('active');
+        $('#displayCameraCollapse').collapse('hide');
+        videoStreamListener.unsubscribe();
+        cameraDisplay = false;
+    }
+    else
+    {
+        $('#displayCameraLabel').addClass('active');
+        $('#displayCameraCollapse').collapse('show');
+        videoStreamListener.subscribe(function(message) {
+            document.getElementById('videoStreamImg').src = "data:image/jpg;base64," + message.data;
+        });
+        cameraDisplay = true;
+    }
+})
+
+var batteryListener = new ROSLIB.Topic({
+    ros: ros,
+    name: '/charge_estimate',
+    messageType: 'std_msgs/Float64'
+});
+
+batteryListener.subscribe(function(message) {
+    $('#battery').css('width', message.data+'%').attr('aria-valuenow', message.data);
+});
+
+var waypointPub = new ROSLIB.Topic({
+    ros : ros,
+    name : '/mission/mission_plan',
+    messageType : 'cohoma_msgs/MissionPlan'
+});
+
+
+var submitMissionClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/mission/push_mission',
+    serviceType : 'cohoma_msgs/PushMission'
+});
+
+var launchMissionClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/mission/launch_mission',
+    serviceType : 'std_srvs/Trigger'
+});
+
+var abortMissionClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/mission/abort_mission',
+    serviceType : 'std_srvs/Empty'
+});
+
+/// Mode selection Navigation | Exploration | Tasks
 
 $('#navigationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
@@ -66,7 +145,7 @@ $('#telemetryModeBtn:input').change(function () {
 
 // Navigation
 
-$(".addingWaypointBtn").click(function (event) {
+$("#addingWaypointBtn").click(function (event) {
     $('#addingWaypointCollapse').collapse('hide');
     $('#addingWaypointCancelCollapse').collapse('show');
     addingWaypoint = true;
@@ -115,7 +194,8 @@ map.on('click', function (e) {
     }
 });
 
-// Swap
+/// Swap
+
 var el = document.getElementById('waypointListGroup');
 
 var swapArrayElements = function (arr, indexA, indexB) {
@@ -136,21 +216,83 @@ var sortable = Sortable.create(el, {
     animation: 150,
 });
 
-// Send mission
+/// Send mission
+
 $("#submitWaypointList").click(function (event) {
-    if (!$('#submitWaypointList').hasClass('disabled')){
-        let wp = [];
-        let id = 0;
-        waypointList.forEach(element => {
-            wp.push({
-                "latlong": element.latlong,
-                "id": "id" + id
-            });
-            id++;
-        })
-        sendWaypoint(wp);
-        publishWaypoint(wp);
-    }
+    let hmiWaypoints = [];
+    let id = 0;
+
+    let currentTime = new Date();
+    let cohomaWaypoints = [];
+    let secs = Math.floor(currentTime.getTime()/1000);
+    let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
+
+    waypointList.forEach(w => {
+        hmiWaypoints.push({
+            "latlong": w.latlong,
+            "id": "id" + id
+        });
+        id++;
+
+        let wayPoint = new ROSLIB.Message({
+            position : {
+                latitude : w.latlong[0],
+                longitude : w.latlong[1],
+                altitude : 0.0
+            },
+            trap_clearance : false,
+            reached : false
+        });
+        cohomaWaypoints.push(wayPoint);
+    });
+    let request = new ROSLIB.ServiceRequest({
+        mission_id : "cohoma_hmi-" + secs + "." + nsecs,
+        current_seq : 0,
+        waypoints : cohomaWaypoints,
+    });
+
+    if (missionLaunched) {
+        let request = new ROSLIB.ServiceRequest();
+        abortMissionClient.callService(request, function(result) {
+            missionLaunched = false;
+            $('#launchMissionBtn').removeClass('disabled');
+            $('#abortMissionBtn').addClass('disabled');
+        });
+    };
+
+    submitMissionClient.callService(request, function(result) {
+        if (result.success){
+            sendWaypoint(hmiWaypoints);
+            $('#launchMissionBtn').removeClass('disabled');
+            $('#abortMissionBtn').addClass('disabled');
+            $('#submitMissionCollapse').collapse('hide');
+            $('#launchMissionCollapse').collapse('show');
+        };
+    });
+});
+
+$("#launchMissionBtn").click(function (event) {
+    if (!missionLaunched){
+        let request = new ROSLIB.ServiceRequest();
+        launchMissionClient.callService(request, function(result) {
+            if (result.success){
+                missionLaunched = true;
+                $('#launchMissionBtn').addClass('disabled');
+                $('#abortMissionBtn').removeClass('disabled');
+            }
+        });
+    };
+});
+
+$("#abortMissionBtn").click(function (event) {
+    if (missionLaunched){
+        let request = new ROSLIB.ServiceRequest();
+        abortMissionClient.callService(request, function(result) {
+            missionLaunched = false;
+            $('#launchMissionBtn').removeClass('disabled');
+            $('#abortMissionBtn').addClass('disabled');
+        });
+    };
 });
 
 var updatePath = function () {
@@ -175,6 +317,7 @@ var removeWaypoint = function (event) {
     });
     waypointList.splice(k, 1);
     $(this).closest("li").remove();
+    updateWaypointList(waypointList);
     updatePath();
     if (waypointList.length == 0){
         $("#clearWaypointList").addClass("disabled");
@@ -214,7 +357,7 @@ var updateWaypointList = function (waypoints) {
                     w.latlong = [position.lat, position.lng];
 
                     document.getElementById(w.id+'-text').childNodes[0].nodeValue = posShow(position);
-
+                    updateWaypointList(waypointList);
                     updatePath();
                 });
                 w.marker = marker;
@@ -237,6 +380,10 @@ var updateWaypointList = function (waypoints) {
     });
 
     $(".removeWaypointBtn").click(removeWaypoint);
+
+    $('#submitMissionCollapse').collapse('show');
+    $('#launchMissionCollapse').collapse('hide');
+    $('#launchMissionBtn').addClass('disabled');
 }
 
 /// Initialize
@@ -254,48 +401,9 @@ var decorator = L.polylineDecorator(polyline, {
 
 updatePath();
 
-// ROS
-
-var velocityListener = new ROSLIB.Topic({
-    ros : ros,
-    name : '/husky_velocity_controller/odom',
-    messageType : 'nav_msgs/Odometry'
-});
-
-velocityListener.subscribe(function(message) {
-    let velocity_kmh = 3.6 * message.twist.twist.linear.x;
-    velocity.value = Math.abs(velocity_kmh.toFixed(2));
-});
-
-var videoStreamListener = new ROSLIB.Topic({
-    ros: ros,
-    name: '/realsense/color/image_raw/compressed',
-    messageType: 'sensor_msgs/CompressedImage'
-});
-
-videoStreamListener.subscribe(function(message) {
-    document.getElementById('videoStreamImg').src = "data:image/jpg;base64," + message.data;
-});
-
-var batteryListener = new ROSLIB.Topic({
-    ros: ros,
-    name: '/charge_estimate',
-    messageType: 'std_msgs/Float64'
-});
-
-batteryListener.subscribe(function(message) {
-    $('#battery').css('width', message.data+'%').attr('aria-valuenow', message.data);
-});
-
-let waypointPub = new ROSLIB.Topic({
-    ros : ros,
-    name : '/mission/mission_plan',
-    messageType : 'cohoma_msgs/MissionPlan'
-});
-
 var publishWaypoint = function(waypoints) {
     let currentTime = new Date();
-    let wayPointList = [];
+    let cohomaWaypoints = [];
     let secs = Math.floor(currentTime.getTime()/1000);
     let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
     waypoints.forEach(w => {
@@ -308,7 +416,7 @@ var publishWaypoint = function(waypoints) {
             trap_clearance : false,
             reached : false
         });
-        wayPointList.push(wayPoint);
+        cohomaWaypoints.push(wayPoint);
     })
     let missionPlan = new ROSLIB.Message({
         header : {
@@ -319,7 +427,7 @@ var publishWaypoint = function(waypoints) {
         },
         mission_id : "cohoma_hmi-" + secs + "." + nsecs,
         current_seq : 0,
-        waypoints : wayPointList,
+        waypoints : cohomaWaypoints,
     });
     waypointPub.publish(missionPlan);
 };

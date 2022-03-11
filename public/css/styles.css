@@ -80,6 +80,10 @@ html, body, #map {
   display: none;
 }
 
+#displayCameraBtn {
+  display: none;
+}
+
 .removeWaypointBtn {
   float: right;
 
@@ -96,7 +100,7 @@ html, body, #map {
   padding-left: 0px;
 }
 
-.addingWaypointBtn {
+#addingWaypointBtn {
   float: right;
 
   padding-top: 0px;

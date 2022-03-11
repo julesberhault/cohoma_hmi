@@ -2,9 +2,9 @@
   "name": "cohoma_hmi",
   "version": "0.1.0",
   "description": "Webserver to control Rover/Drone.",
-  "main": "launchs.js",
+  "main": "app.js",
   "scripts": {
-    "watch": "nodemon ./launch.js",
+    "watch": "nodemon ./app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

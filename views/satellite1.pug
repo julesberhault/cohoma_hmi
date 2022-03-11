@@ -10,7 +10,7 @@ block content
         .col.px-2
             .collapse#navigationModeCollapse
                 .py-1
-                    button(type='button').btn.btn-secondary.btn-block#refreshMission Rafraichir mission
+                    button(type='button').btn.btn-outline-secondary.btn-block#refreshMission Rafraichir mission
                     ol.list-group.list-group-numbered.pt-1#waypointListGroup
                     .collapse#addingWaypointCancelCollapse
                         .pt-1
@@ -21,15 +21,21 @@ block content
                                         .col.pr-1
                                             button(type='button').btn.btn-danger.btn-block.disabled#clearWaypointList Effacer tout
                                         .col.pl-1
-                                            button(type='button').btn.btn-success.btn-block#addWaypointCancel Terminer
+                                            button(type='button').btn.btn-secondary.btn-block#addWaypointCancel Terminer
                     .collapse.show#addingWaypointCollapse
                         .pt-1
                             lu.list-group
                                 li.list-group-item.d-flex.justify-content-between.align-items-center#addElement Modifier l'itinéraire
-                                    button(type='button').btn.addingWaypointBtn
+                                    button(type='button').btn#addingWaypointBtn
                                         img(src='../css/images/plus.svg')
+                        .collapse.show#submitMissionCollapse
+                            .pt-1
+                                button(type='button').btn.btn-secondary.btn-block.disabled#submitWaypointList Envoyer mission
+                        .collapse#launchMissionCollapse
+                            .pt-1
+                                button(type='button').btn.btn-success.btn-block#launchMissionBtn Lancer mission
                         .pt-1
-                            button(type='button').btn.btn-success.btn-block.disabled#submitWaypointList Envoyer mission
+                            button(type='button').btn.btn-danger.btn-block#abortMissionBtn Arrêter mission
             .collapse#explorationModeCollapse
                 .py-1
                     .card.card-body
@@ -48,7 +54,10 @@ block content
                     .progress(style='height: 40px;')
                         .progress-bar.bg-success.progress-bar-striped.progress-bar-animated(role='progressbar' style='width: 25%;' aria-valuenow='25' aria-valuemin='0' aria-valuemax='100')#battery Batterie
                 .pt-1
-                    img.img-fluid.rounded(id='videoStreamImg' src='../css/images/placeholder.png')
+                    label.btn.btn-outline-secondary.btn-block(for='displayCameraBtn' id='displayCameraLabel') #[input(type='checkbox' id='displayCameraBtn' autocomplete='off')] Caméra embarquée
+                .collapse#displayCameraCollapse
+                    .pt-1
+                        img.img-fluid.rounded(id='videoStreamImg' src='../css/images/placeholder.png')
                 .pt-1
                     .row.pr-2.remove-height
                         .col-6
