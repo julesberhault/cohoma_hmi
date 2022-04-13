@@ -1,7 +1,7 @@
-# Sailboat telemetry
+# COHOMA HMI
 
-This project is a [Node.js](https://nodejs.org/en/) application designed for our MicroTransat sailboat.
-It can be configured to be ran either on the boat's Rasberry Pi or on pc a with a socket connection.
+This project is a [Node.js](https://nodejs.org/en/) application first designed for CoHoMa challenge, a robotic competition organized by french military forces to show potential of a colaboration between both human and robot on a defusing mission.
+It can be configured to be ran on a pc with a socket connection to manage Husky Rover (https://github.com/julesberhault/husky.git) and Anafi Drone through ROS (rosbridge_server/websocket).
 
 ## Installation
 
@@ -27,4 +27,4 @@ Start the program :
 node start.js
 ```
 
-The portal should appear on the Raspberry Pi's IP address, port 3000.
+The portal should appear on the pc address, port 8000.
