@@ -116,21 +116,17 @@ var aerialTrapRedMarker = new L.marker([0, 0], {
 
 // ROS
 
-var ros = new ROSLIB.Ros({url : 'ws://147.250.35.86:9090'})
+var ros = new ROSLIB.Ros({url : 'ws://11.0.0.3:9090'})
 
 var compassListenerSat1 = new ROSLIB.Topic({
     ros : ros,
-    //name : '/satellite1/sbg/gps_hdt',
     name : '/odometry/filtered_map',
-    //messageType : 'sbg_driver/SbgGpsHdt'
     messageType : 'nav_msgs/Odometry'
 });
 
 var gpsListenerSat1 = new ROSLIB.Topic({
     ros : ros,
-    //name : '/satellite1/sbg/gps_pos',
     name : '/gps/filtered',
-    //messageType : 'sbg_driver/SbgGpsPos'
     messageType : 'sensor_msgs/NavSatFix'
 });
 

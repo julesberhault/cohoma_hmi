@@ -8,6 +8,9 @@ var addingWaypoint = false;
 var currID = 0;
 var cameraDisplay = false;
 var missionLaunched = false;
+var eStopOn = false;
+
+var telemetryListenerList = [];
 
 /// Socket.io | Recover mission
 
@@ -32,7 +35,7 @@ socket.on("currentWaypointList", function(currentWaypointList) {
 
 var velocityListener = new ROSLIB.Topic({
     ros : ros,
-    name : '/husky_velocity_controller/odom',
+    name : '/odometry/filtered_map',
     messageType : 'nav_msgs/Odometry'
 });
 
@@ -40,15 +43,12 @@ velocityListener.subscribe(function(message) {
     let velocity_kmh = 3.6 * message.twist.twist.linear.x;
     velocity.value = Math.abs(velocity_kmh.toFixed(2));
 });
+telemetryListenerList.push(velocityListener);
 
 var videoStreamListener = new ROSLIB.Topic({
     ros: ros,
-    name: '/realsense/color/image_raw/compressed',
+    name: '/zed_node/left/image_rect_gray/compressed',
     messageType: 'sensor_msgs/CompressedImage'
-});
-
-videoStreamListener.subscribe(function(message) {
-    document.getElementById('videoStreamImg').src = "data:image/jpg;base64," + message.data;
 });
 
 $('#displayCameraBtn:input').change(function () {
@@ -57,6 +57,7 @@ $('#displayCameraBtn:input').change(function () {
         $('#displayCameraLabel').removeClass('active');
         $('#displayCameraCollapse').collapse('hide');
         videoStreamListener.unsubscribe();
+        telemetryListenerList.pop(telemetryListenerList.indexOf(videoStreamListener));
         cameraDisplay = false;
     }
     else
@@ -66,19 +67,49 @@ $('#displayCameraBtn:input').change(function () {
         videoStreamListener.subscribe(function(message) {
             document.getElementById('videoStreamImg').src = "data:image/jpg;base64," + message.data;
         });
+        telemetryListenerList.push(videoStreamListener);
         cameraDisplay = true;
     }
 })
 
-var batteryListener = new ROSLIB.Topic({
-    ros: ros,
-    name: '/charge_estimate',
-    messageType: 'std_msgs/Float64'
+var eStopPublisher = new ROSLIB.Topic({
+    ros : ros,
+    name : '/e_stop',
+    messageType : 'std_msgs/Bool'
 });
 
-batteryListener.subscribe(function(message) {
-    $('#battery').css('width', message.data+'%').attr('aria-valuenow', message.data);
+$("#emergencyStop").click(function (event) {
+    if (eStopOn)
+    {
+        let eStopMsg = new ROSLIB.Message({
+            data : false
+        });
+        eStopPublisher.publish(eStopMsg);
+        eStopOn = false;
+        $('#emergencyStop').removeClass('active');
+    }
+    else
+    {
+        let eStopMsg = new ROSLIB.Message({
+            data : true
+        });
+        eStopPublisher.publish(eStopMsg);
+        eStopOn = true;
+        $('#emergencyStop').addClass('active');
+    }
 });
+
+
+var huskyStatusListener = new ROSLIB.Topic({
+    ros: ros,
+    name: '/status',
+    messageType: 'husky_msgs/HuskyStatus'
+});
+
+huskyStatusListener.subscribe(function(message) {
+    $('#battery').css('width', message.charge_estimate*100+'%').attr('aria-valuenow', message.charge_estimate*100);
+});
+telemetryListenerList.push(huskyStatusListener);
 
 var waypointPub = new ROSLIB.Topic({
     ros : ros,
@@ -110,6 +141,7 @@ var abortMissionClient = new ROSLIB.Service({
 $('#navigationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
     $('#'+mode+'ModeCollapse').collapse('hide');
+    unsubscribeTelemetryListener();
     mode = 'navigation';
     sendMode(mode);
     $('#'+mode+'ModeLabel').addClass('active');
@@ -119,6 +151,7 @@ $('#navigationModeBtn:input').change(function () {
 $('#explorationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
     $('#'+mode+'ModeCollapse').collapse('hide');
+    unsubscribeTelemetryListener();
     mode = 'exploration';
     sendMode(mode);
     $('#'+mode+'ModeLabel').addClass('active');
@@ -128,6 +161,7 @@ $('#explorationModeBtn:input').change(function () {
 $('#tasksModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
     $('#'+mode+'ModeCollapse').collapse('hide');
+    unsubscribeTelemetryListener();
     mode = 'tasks';
     sendMode(mode);
     $('#'+mode+'ModeLabel').addClass('active');
@@ -430,4 +464,11 @@ var publishWaypoint = function(waypoints) {
         waypoints : cohomaWaypoints,
     });
     waypointPub.publish(missionPlan);
+};
+
+var unsubscribeTelemetryListener = function() {
+    telemetryListenerList.forEach(listener => {
+        listener.unsubscribe()
+    })
+    telemetryListenerList.length = 0; // clear array
 };
