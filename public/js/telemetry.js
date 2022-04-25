@@ -106,3 +106,10 @@ var velocity = new RadialGauge({
     colorBorderOuter: "#ccc",
     animation: false
 }).draw();
+
+var refreshCompass = function(heading)
+{
+    // Heading angle in degrees taking value from -180° to 180°
+    if (heading < 0.0) { compass.value = 360.0+heading; }
+    else { compass.value = heading; }
+}

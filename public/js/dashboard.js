@@ -116,7 +116,7 @@ var aerialTrapRedMarker = new L.marker([0, 0], {
 
 // ROS
 
-var ros = new ROSLIB.Ros({url : 'ws://11.0.0.3:9090'})
+var ros = new ROSLIB.Ros({url : 'ws://0.0.0.0:9090'})
 
 var compassListenerSat1 = new ROSLIB.Topic({
     ros : ros,
@@ -163,27 +163,12 @@ var gpsListenerSat4 = new ROSLIB.Topic({
     messageType : 'sbg_driver/SbgGpsPos'
 });
 
-var refreshCompass = function(heading)
-{
-    // Heading angle in degrees taking value from -180° to 180°
-    if (selectedSatellite = 1) {
-        if (heading < 0.0)
-        {
-            compass.value = 360.0+heading;
-        }
-        else
-        {
-            compass.value = heading;
-        }
-    }
-}
-
 compassListenerSat1.subscribe(function(message){
     let qw = message.pose.pose.orientation.w;
     let qx = message.pose.pose.orientation.x;
     let qy = message.pose.pose.orientation.y;
     let qz = message.pose.pose.orientation.z;
-    satellite1Pos.hea = 90.0-180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
+    satellite1Pos.hea = 90.0-180.0*Math.atan2(2.0*(qw*qz+qx+qy), 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite1Marker.setRotationAngle(satellite1Pos.hea/2.0);
     refreshCompass(satellite1Pos.hea);
 })
