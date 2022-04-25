@@ -127,10 +127,3 @@ html, body, #map {
 .progress {
   background-color: #ced4da;
 }
-
-#state {
-  border: 8px solid rgb(0, 166, 255);
-  border-radius: 5px;
-  padding: 5px;
-  text-align: left;
-}

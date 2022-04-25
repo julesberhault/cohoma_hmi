@@ -63,16 +63,11 @@ var stateListener = new ROSLIB.Topic({
     messageType : 'std_msgs/String'
 });
 
+var droneState = {"LANDED" : "Au sol", "TAKINGOFF" : "Décollage", "LANDING" : "Atterrissage", "HOVERING" : "Survol", "FLYING" : "En vol", "MOTOR_RAMPING" : "Montée en puissance", "EMERGENCY_LANDING" : "Atterrissage en urgence", "USERTAKEOFF" : "Décollage utilisateur", "EMERGENCY" : "Etat d'urgence"};
 stateListener.subscribe(function(message) {
-    let state_str = message.data;
-    state = state_str;
-    //console.log(state);
-    var canvas = document.getElementById("state");
-    var context = canvas.getContext("2d");
-    context.fillStyle = "black";
-    context.font = "bold 16px Arial";
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillText(state, 20, (canvas.height / 2) + 7);
+    state = message.data;
+    document.getElementById("droneState").innerHTML = droneState[state];
+
 });
 telemetryListenerList.push(stateListener);
 
@@ -367,32 +362,23 @@ $("#abortMissionBtn").click(function (event) {
     };
 });
 
-$("#takeOff").click(function (event) {
+$("#takeOffBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
-    console.log("TO");
     if(state == "LANDED"){
-        console.log("TO1");
         let request = new ROSLIB.ServiceRequest({
             str : "take_off"
         });
-        console.log("TO2");
-        takeOffLandClient.callService(request, function(result) {
-            console.log(result.str);
-        });
-        console.log("TO3");
+        takeOffLandClient.callService(request, function(result) {});
     };
 });
 
-$("#land").click(function (event) {
+$("#landBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
-    console.log("L");
     if(state != "LANDED"){
         let request = new ROSLIB.ServiceRequest({
             str : "land"
         });
-        takeOffLandClient.callService(request, function(result) {
-            console.log(result.str);
-        });
+        takeOffLandClient.callService(request, function(result) {});
     };
 });
 
@@ -486,6 +472,8 @@ var updateWaypointList = function (waypoints) {
     $('#launchMissionCollapse').collapse('hide');
     $('#launchMissionBtn').addClass('disabled');
 }
+
+
 
 /// Initialize
 

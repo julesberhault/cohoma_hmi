@@ -59,11 +59,12 @@ var altitude = new RadialGauge({
     minValue: 0,
     maxValue: 14,
     title:"Altitude",
-    colorTitle: "#666",
+    colorTitle: "#eee",
     units: "m",
-    colorUnits: "#666",
-    colorMajorTicks: "#666",
-    colorMinorTicks: "#777",
+    colorUnits: "#eee",
+    colorMajorTicks: "#ddd",
+    colorMinorTicks: "#ccc",
+    colorNumbers: "#eee",
     minValue: 0,
     maxValue: 14,
     ticksAngle: 270,
@@ -84,11 +85,11 @@ var altitude = new RadialGauge({
         {
             "from": 10,
             "to": 14,
-            "color": "#D11"
+            "color": "#a22"
         }
     ],
-    colorPlate: "#fff",
-    colorPlateEnd: "#eee",
+    colorPlate: "#333",
+    colorPlateEnd: "#222",
     borderShadowWidth: 0,
     borders: true,
     needleType: "arrow",
@@ -96,14 +97,17 @@ var altitude = new RadialGauge({
     valueBox: true,
     valueInt: 2,
     valueDec: 1,
-    needleCircleSize: 10,
+    colorNeedleCircleOuter: "#222",
+    needleCircleSize: 12,
     needleCircleOuter: true,
     needleCircleInner: false,
     borders: true,
     borderInnerWidth: 2,
     borderMiddleWidth: 3,
     borderOuterWidth: 2,
-    colorBorderOuter: "#ccc",
+    colorBorderInner: "#222",
+    colorBorderMiddle: "#333",
+    colorBorderOuter: "#222",
     animation: false
 }).draw();
 
@@ -163,4 +167,3 @@ var velocity = new RadialGauge({
 }).draw();
 
 var state = new String();
-//var state = "";

@@ -59,30 +59,29 @@ block content
                     .pt-1
                         img.img-fluid.rounded(id='videoStreamImg' src='../css/images/placeholder.png')
                 .pt-1
-                    .row.pr-2.remove-height
+                    .row.remove-height
                         .col-6
                             canvas#compass
                         .col-6
                             canvas#velocity
+                    .row.remove-height
                         .col-6
                             canvas#altitude
                         .col-6
-                            canvas(
-                                id="state"
-                                width = 120
-                                height = 40
-                            )
+                            .card.text-center(style='height: 100%')
+                                .card-header Situation de vol
+                                .card-body
+                                    .card-text
+                                        .h3 #[.badge.text-wrap.bg-primary.text-white#droneState]
                     script(src='/js/telemetry_aerial.js')
     .row.border-bottom.shadow.py-2
         .col.px-2
+            .collapse.show#takeOffCollapse
+                button(type='button').btn.btn-secondary.btn-block#takeOffBtn Décollage
+            .collapse#takeOffCollapse
+                .pt-1
+                button(type='button').btn.btn-secondary.btn-block#landBtn Attérissage
+            .pt-1
             button(type='button').btn.btn-outline-danger.btn-block#emergencyStop Arrêt d'urgence
-
-    .row.border-bottom.shadow.py-2
-        .col.px-2
-            button(type='button').btn.btn-outline-primary.btn-block#takeOff Décollage
-
-    .row.border-bottom.shadow.py-2
-        .col.px-2
-            button(type='button').btn.btn-outline-primary.btn-block#land Attérissage
 
     script(src='/js/satellite3.js')
