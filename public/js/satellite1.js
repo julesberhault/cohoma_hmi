@@ -34,7 +34,7 @@ socket.on("currentWaypointList", function(currentWaypointList) {
 /// ROS
 
 var velocityListener = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros1,
     name : '/odometry/filtered_map',
     messageType : 'nav_msgs/Odometry'
 });
@@ -46,7 +46,7 @@ velocityListener.subscribe(function(message) {
 telemetryListenerList.push(velocityListener);
 
 var videoStreamListener = new ROSLIB.Topic({
-    ros: ros,
+    ros: ros1,
     name: '/zed_node/left/image_rect_gray/compressed',
     messageType: 'sensor_msgs/CompressedImage'
 });
@@ -73,7 +73,7 @@ $('#displayCameraBtn:input').change(function () {
 })
 
 var eStopPublisher = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros1,
     name : '/e_stop',
     messageType : 'std_msgs/Bool'
 });
@@ -101,7 +101,7 @@ $("#emergencyStop").click(function (event) {
 
 
 var huskyStatusListener = new ROSLIB.Topic({
-    ros: ros,
+    ros: ros1,
     name: '/status',
     messageType: 'husky_msgs/HuskyStatus'
 });
@@ -112,26 +112,26 @@ huskyStatusListener.subscribe(function(message) {
 telemetryListenerList.push(huskyStatusListener);
 
 var waypointPub = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros1,
     name : '/mission/mission_plan',
     messageType : 'cohoma_msgs/MissionPlan'
 });
 
 
 var submitMissionClient = new ROSLIB.Service({
-    ros : ros,
+    ros : ros1,
     name : '/mission/push_mission',
     serviceType : 'cohoma_msgs/PushMission'
 });
 
 var launchMissionClient = new ROSLIB.Service({
-    ros : ros,
+    ros : ros1,
     name : '/mission/launch_mission',
     serviceType : 'std_srvs/Trigger'
 });
 
 var abortMissionClient = new ROSLIB.Service({
-    ros : ros,
+    ros : ros1,
     name : '/mission/abort_mission',
     serviceType : 'std_srvs/Empty'
 });

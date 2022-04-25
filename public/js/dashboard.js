@@ -116,49 +116,55 @@ var aerialTrapRedMarker = new L.marker([0, 0], {
 
 // ROS
 
-var ros = new ROSLIB.Ros({url : 'ws://11.0.0.3:9090'})
+var ros1 = new ROSLIB.Ros({url : 'ws://11.0.0.6:9090'})
+var ros2 = new ROSLIB.Ros({url : 'ws://11.0.0.6:9090'})
+var ros3 = new ROSLIB.Ros({url : 'ws://147.250.35.110:9090'})
+var ros4 = new ROSLIB.Ros({url : 'ws://11.0.0.6:9090'})
+
 
 var compassListenerSat1 = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros1,
     name : '/odometry/filtered_map',
     messageType : 'nav_msgs/Odometry'
 });
 
 var gpsListenerSat1 = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros1,
     name : '/gps/filtered',
     messageType : 'sensor_msgs/NavSatFix'
 });
 
 var compassListenerSat2 = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros2,
     name : '/satellite2/sbg/gps_hdt',
     messageType : 'sbg_driver/SbgGpsHdt'
 });
+
 var gpsListenerSat2 = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros2,
     name : '/satellite2/sbg/gps_pos',
     messageType : 'sbg_driver/SbgGpsPos'
 });
 
 var compassListenerSat3 = new ROSLIB.Topic({
-    ros : ros,
-    name : '/satellite3/sbg/gps_hdt',
-    messageType : 'sbg_driver/SbgGpsHdt'
+    ros : ros3,
+    name : '/anafi/imu',
+    messageType : 'sensor_msgs/Imu'
 });
+
 var gpsListenerSat3 = new ROSLIB.Topic({
-    ros : ros,
-    name : '/satellite3/sbg/gps_pos',
-    messageType : 'sbg_driver/SbgGpsPos'
+    ros : ros3,
+    name : '/anafi/gps',
+    messageType : 'geographic_msgs/GeoPoseStamped'
 });
 
 var compassListenerSat4 = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros4,
     name : '/satellite4/sbg/gps_hdt',
     messageType : 'sbg_driver/SbgGpsHdt'
 });
 var gpsListenerSat4 = new ROSLIB.Topic({
-    ros : ros,
+    ros : ros4,
     name : '/satellite4/sbg/gps_pos',
     messageType : 'sbg_driver/SbgGpsPos'
 });
@@ -235,16 +241,19 @@ gpsListenerSat2.subscribe(function(message) {
 });
 
 compassListenerSat3.subscribe(function(message){
-    satellite3Pos.hea = message.true_heading;
-    satellite3Marker.setRotationAngle(satellite3Pos.hea / 2);
-    if (selectedSatellite = 3) {
-        compass.value = satellite3Pos.hea;
-    }
+    let qw = message.orientation.w;
+    let qx = message.orientation.x;
+    let qy = message.orientation.y;
+    let qz = message.orientation.z;
+    satellite3Pos.hea = 180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
+    satellite3Marker.setRotationAngle(satellite3Pos.hea/2.0);
+    refreshCompass(satellite3Pos.hea);
 })
+
 var i3 = 0;
 gpsListenerSat3.subscribe(function(message) {
-    satellite3Pos.lat = message.latitude;
-    satellite3Pos.lng = message.longitude;
+    satellite3Pos.lat = message.pose.position.latitude;
+    satellite3Pos.lng = message.pose.position.longitude;
     if (mapSetted) {
         if(i3 == 0)
         {
