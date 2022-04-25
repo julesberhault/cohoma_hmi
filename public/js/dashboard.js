@@ -189,7 +189,7 @@ compassListenerSat1.subscribe(function(message){
     let qx = message.pose.pose.orientation.x;
     let qy = message.pose.pose.orientation.y;
     let qz = message.pose.pose.orientation.z;
-    satellite1Pos.hea = -180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
+    satellite1Pos.hea = 90.0-180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite1Marker.setRotationAngle(satellite1Pos.hea/2.0);
     refreshCompass(satellite1Pos.hea);
 })

@@ -114,14 +114,14 @@ telemetryListenerList.push(huskyStatusListener);
 var waypointPub = new ROSLIB.Topic({
     ros : ros1,
     name : '/mission/mission_plan',
-    messageType : 'cohoma_msgs/MissionPlan'
+    messageType : 'navigation_msgs/MissionPlan'
 });
 
 
 var submitMissionClient = new ROSLIB.Service({
     ros : ros1,
     name : '/mission/push_mission',
-    serviceType : 'cohoma_msgs/PushMission'
+    serviceType : 'navigation_msgs/PushMission'
 });
 
 var launchMissionClient = new ROSLIB.Service({
