@@ -111,7 +111,21 @@ var aerialTrapRedIcon = L.icon({
 });
 
 var aerialTrapRedMarker = new L.marker([0, 0], {
-    icon: aerialTrapRedIcon,
+    icon: aerialTrapRedIcon
+});
+
+var blackDotIcon = L.icon({
+    iconUrl: "../css/images/black_dot.svg",
+    iconSize:     [16, 16],
+    iconAnchor:   [8, 8],
+    popupAnchor:  [0, 0]
+});
+
+var blueDotIcon = L.icon({
+    iconUrl: "../css/images/blue_dot.svg",
+    iconSize:     [16, 16],
+    iconAnchor:   [8, 8],
+    popupAnchor:  [0, 0]
 });
 
 // ROS

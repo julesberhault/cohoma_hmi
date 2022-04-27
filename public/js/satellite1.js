@@ -2,8 +2,8 @@ $("#navSatellite1").addClass("active");
 selectedSatellite = 1;
 
 // Variable
-var waypointList = [];
 var mode;
+var waypointList = [];
 var addingWaypoint = false;
 var currID = 0;
 var cameraDisplay = false;
@@ -381,6 +381,7 @@ var updateWaypointList = function (waypoints) {
         waypoints.forEach(w => {
             if (!w.marker) {
                 var marker = new L.marker(w.latlong, {
+                    icon: blackDotIcon,
                     draggable: 'true'
                 });
                 marker.on('dragend', function (event) {
@@ -420,21 +421,6 @@ var updateWaypointList = function (waypoints) {
     $('#launchMissionBtn').addClass('disabled');
 }
 
-/// Initialize
-
-updateWaypointList(waypointList);
-
-var polyline = L.polyline([], {weight: 8, opacity: 1, color: '#fc0'}).addTo(map);
-
-var decorator = L.polylineDecorator(polyline, {
-    patterns: [
-        // defines a pattern of 10px-wide dashes, repeated every 100px on the line
-        {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 8, pathOptions: {fillOpacity: 0.3, weight: 0, color: '#222'}})}
-    ]
-}).addTo(map);
-
-updatePath();
-
 var publishWaypoint = function(waypoints) {
     let currentTime = new Date();
     let cohomaWaypoints = [];
@@ -472,3 +458,18 @@ var unsubscribeTelemetryListener = function() {
     })
     telemetryListenerList.length = 0; // clear array
 };
+
+/// Initialize
+
+updateWaypointList(waypointList);
+
+var polyline = L.polyline([], {weight: 6, opacity: 1, color: '#fc0'}).addTo(map);
+
+var decorator = L.polylineDecorator(polyline, {
+    patterns: [
+        // defines a pattern of 10px-wide dashes, repeated every 100px on the line
+        {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 6, pathOptions: {fillOpacity: 0.3, weight: 0, color: '#222'}})}
+    ]
+}).addTo(map);
+
+updatePath();

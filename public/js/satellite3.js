@@ -2,13 +2,16 @@ $("#navSatellite3").addClass("active");
 selectedSatellite = 3;
 
 // Variable
-var waypointList = [];
 var mode;
+var waypointList = [];
 var addingWaypoint = false;
 var currID = 0;
+var currCoverageAreaPointID = 0;
 var cameraDisplay = false;
 var missionLaunched = false;
 var eStopOn = false;
+var addingCoverageArea = false;
+var coverageAreaList = [];
 
 var telemetryListenerList = [];
 
@@ -63,11 +66,28 @@ var stateListener = new ROSLIB.Topic({
     messageType : 'std_msgs/String'
 });
 
-var droneState = {"LANDED" : "Au sol", "TAKINGOFF" : "Décollage", "LANDING" : "Atterrissage", "HOVERING" : "Survol", "FLYING" : "En vol", "MOTOR_RAMPING" : "Montée en puissance", "EMERGENCY_LANDING" : "Atterrissage en urgence", "USERTAKEOFF" : "Décollage utilisateur", "EMERGENCY" : "Etat d'urgence"};
+var droneStateList = {"LANDED" : "Au sol", "TAKINGOFF" : "Décollage", "LANDING" : "Atterrissage", "HOVERING" : "Survol", "FLYING" : "En vol", "MOTOR_RAMPING" : "Montée en puissance", "EMERGENCY_LANDING" : "Atterrissage en urgence", "USERTAKEOFF" : "Décollage utilisateur", "EMERGENCY" : "Etat d'urgence"};
 stateListener.subscribe(function(message) {
-    state = message.data;
-    document.getElementById("droneState").innerHTML = droneState[state];
-
+    droneState = message.data;
+    document.getElementById("droneState").innerHTML = droneStateList[droneState];
+    if (droneState in ["HOVERING", "FLYING"]) {
+        $("#landBtn").removeChild($("#landLoading"));
+        $('#takeOffCollapse').collapse('hide');
+        $('#landCollapse').collapse('show');
+        $("#landBtn").removeClass("disabled")
+    }
+    if (droneState in ["LANDED"]) {
+        $("#takeOffBtn").removeChild($("#takeOffLoading"));
+        $('#takeOffCollapse').collapse('show');
+        $('#landCollapse').collapse('hide');
+        $("#takeOffBtn").removeClass("disabled")
+    }
+    else {
+        $("#landBtn").appendChild(document.createElement('<span class="spinner-grow spinner-grow-sm" id="landLoading" role="status" aria-hidden="true"></span>'));
+        $("#landBtn").addClass("disabled")
+        $("#takeOffBtn").appendChild(document.createElement('<span class="spinner-grow spinner-grow-sm" id="takeOffLoading" role="status" aria-hidden="true"></span>'));
+        $("#takeOffBtn").addClass("disabled")
+    }
 });
 telemetryListenerList.push(stateListener);
 
@@ -125,7 +145,6 @@ $("#emergencyStop").click(function (event) {
     }
 });
 
-
 var huskyStatusListener = new ROSLIB.Topic({
     ros: ros3,
     name: '/status',
@@ -167,6 +186,12 @@ var takeOffLandClient = new ROSLIB.Service({
     ros : ros3,
     name : '/take_off_land',
     serviceType : 'anafi_base/TakeOffLand'
+});
+
+var submitCoverageArea = new ROSLIB.Service({
+    ros : ros3,
+    name : '/mission/coverage_area',
+    serviceType : 'anafi_control/CoverageArea'
 });
 
 /// Mode selection Navigation | Exploration | Tasks
@@ -238,27 +263,6 @@ $('#clearWaypointList').click(function (event) {
 
 $('#refreshMission').click(function (event) {
     socket.emit("getWaypointList");
-});
-
-map.on('click', function (e) {
-    $('.waypointItem.active').removeClass("active");
-    if (addingWaypoint) {
-        var id = "id" + currID;
-        var latlong = e.latlng;
-
-        waypointList.push({
-            "latlong": [latlong.lat, latlong.lng],
-            "id": id
-        });
-
-        updateWaypointList(waypointList);
-        updatePath();
-
-        currID++;
-        $(".removeWaypointBtn").click(function (event) {
-            $(this).closest("li").remove();
-        });
-    }
 });
 
 /// Swap
@@ -364,7 +368,7 @@ $("#abortMissionBtn").click(function (event) {
 
 $("#takeOffBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
-    if(state == "LANDED"){
+    if(droneState == "LANDED"){
         let request = new ROSLIB.ServiceRequest({
             str : "take_off"
         });
@@ -374,22 +378,13 @@ $("#takeOffBtn").click(function (event) {
 
 $("#landBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
-    if(state != "LANDED"){
+    if(droneState != "LANDED"){
         let request = new ROSLIB.ServiceRequest({
             str : "land"
         });
         takeOffLandClient.callService(request, function(result) {});
     };
 });
-
-var updatePath = function () {
-    var latlongs = [];
-    waypointList.forEach(element => {
-        latlongs.push(element.latlong);
-    });
-    polyline.setLatLngs(latlongs);
-    decorator.setPaths(polyline);
-}
 
 var removeWaypoint = function (event) {
     var id = $(this).closest("li").attr("id");
@@ -416,6 +411,15 @@ var posShow = function (position) {
     return (Math.trunc(10000 * position.lat) / 10000 + ', ' + Math.trunc(10000 * position.lng) / 10000)
 }
 
+var updatePath = function () {
+    var latlongs = [];
+    waypointList.forEach(element => {
+        latlongs.push(element.latlong);
+    });
+    polyline.setLatLngs(latlongs);
+    decorator.setPaths(polyline);
+}
+
 var updateWaypointList = function (waypoints) {
     // wps must contain an id and a latlong array at the bare minimum
     waypointList.forEach(element => {
@@ -434,6 +438,7 @@ var updateWaypointList = function (waypoints) {
         waypoints.forEach(w => {
             if (!w.marker) {
                 var marker = new L.marker(w.latlong, {
+                    icon: blackDotIcon,
                     draggable: 'true'
                 });
                 marker.on('dragend', function (event) {
@@ -473,22 +478,193 @@ var updateWaypointList = function (waypoints) {
     $('#launchMissionBtn').addClass('disabled');
 }
 
+// Exploration
 
+$("#submitCoverageArea").click(function (event) {
+    let hmiCoverageArea = [];
+    let id = 0;
 
-/// Initialize
+    let currentTime = new Date();
+    let cohomaCoverageArea = [];
+    let secs = Math.floor(currentTime.getTime()/1000);
+    let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
 
-updateWaypointList(waypointList);
+    coverageAreaList.forEach(p => {
+        hmiCoverageArea.push({
+            "latlong": p.latlong,
+            "id": "id-" + id
+        });
+        id++;
+        cohomaCoverageArea.push(new ROSLIB.Message({
+            latitude : p.latlong[0],
+            longitude : p.latlong[1],
+            altitude : 0.0
+            })
+        );
+    });
+    let request = new ROSLIB.ServiceRequest({
+        area : cohomaCoverageArea,
+    });
 
-var polyline = L.polyline([], {weight: 8, opacity: 1, color: '#fc0'}).addTo(map);
+    submitCoverageArea.callService(request, function(result) {
+        if (result.success){
+            coverageAreaList = [];
+            currID = 0;
+            result.waypoints.forEach(w => {
+                coverageAreaList.push({
+                    "latlong": [w.latitude, x.longitude],
+                    "id": "id-" + currID
+                });
+                currID++;
+            updateWaypointList(coverageAreaList);
+            updatePath();
+            });
+        };
+    });
+});
 
-var decorator = L.polylineDecorator(polyline, {
-    patterns: [
-        // defines a pattern of 10px-wide dashes, repeated every 100px on the line
-        {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 8, pathOptions: {fillOpacity: 0.3, weight: 0, color: '#222'}})}
-    ]
-}).addTo(map);
+$("#addingCoverageAreaBtn").click(function (event) {
+    $('#addingCoverageAreaCollapse').collapse('hide');
+    $('#addingCoverageAreaCancelCollapse').collapse('show');
+    addingCoverageArea = true;
+});
 
-updatePath();
+$('#addCoverageAreaCancel').click(function (event) {
+    addingCoverageArea = false;
+    $('#addingCoverageAreaCancelCollapse').collapse('hide');
+    $('#addingCoverageAreaCollapse').collapse('show');
+});
+
+$('#clearCoverageAreaList').click(function (event) {
+    if (!$('#clearCoverageAreaList').hasClass('disabled')){
+        coverageAreaList.forEach(element => {
+            map.removeLayer(element.marker);
+        });
+        currCoverageAreaPointID = 0;
+        coverageAreaList = [];
+        updateCoverageAreaList(coverageAreaList);
+        updatePolygon();
+    }
+});
+
+var updatePolygon = function () {
+    var latlongs = [];
+    coverageAreaList.forEach(element => {
+        latlongs.push(element.latlong);
+    });
+    polygon.setLatLngs(latlongs);
+}
+
+var updateCoverageAreaList = function (coverageAreaPoints) {
+    coverageAreaList = [];
+    if (coverageAreaPoints.length == 0) {
+        $("#clearCoverageAreaList").addClass("disabled");
+        $("#submitCoverageArea").addClass("disabled");
+    } else {
+        $("#clearCoverageAreaList").removeClass("disabled");
+        $("#submitCoverageArea").removeClass("disabled");
+
+        coverageAreaPoints.forEach(p => {
+            if (!p.marker) {
+                var marker = new L.marker(p.latlong, {
+                    icon: blueDotIcon,
+                    draggable: 'true'
+                });
+                marker.on('dragend', function (event) {
+                    var position = marker.getLatLng();
+                    marker.setLatLng(position, {
+                        draggable: 'true'
+                    }).update();
+                    p.latlong = [position.lat, position.lng];
+
+                    document.getElementById(p.id+'-text').childNodes[0].nodeValue = posShow(position);
+                    updateCoverageAreaList(coverageAreaList);
+                    updatePolygon();
+                });
+                p.marker = marker;
+
+                marker.on('click', function (event) {
+                    $('.coverageAreaItem.active').removeClass("active");
+                    $('#' + p.id).addClass("active");
+                });
+            }
+            map.addLayer(p.marker);
+            coverageAreaList.push(p);
+        });
+    }
+    currCoverageAreaPointID = coverageAreaPoints.length + 1;
+
+    $("#coverageAreaListGroup").empty();
+    coverageAreaList.forEach(element => {
+        var position = element.marker.getLatLng();
+        $("#coverageAreaListGroup").append('<li class="list-group-item coverageAreaItem" id="'+element.id+'">\n<div class="d-flex">\n<p class="text flex-grow-1 my-0 align-text-center" id="'+element.id+'-text">'+posShow(position)+'</p>\n<button class="btn removeCoverageAreaBtn" type="button"><img src="../css/images/x.svg"></img></button></div></li>');
+    });
+
+    $(".removeCoverageAreaBtn").click(removeCoverageArea);
+}
+
+var removeCoverageArea = function (event) {
+    var id = $(this).closest("li").attr("id");
+    var i = 0;
+    var k = 0;
+    coverageAreaList.forEach(element => {
+        if (id == element.id) {
+            map.removeLayer(element.marker);
+            k = i;
+        }
+        i++;
+    });
+    coverageAreaList.splice(k, 1);
+    $(this).closest("li").remove();
+    updateCoverageAreaList(coverageAreaList);
+    updatePolygon();
+    if (coverageAreaList.length == 0){
+        $("#clearCoverageAreaList").addClass("disabled");
+        $("#submitCoverageAreaList").addClass("disabled");
+    }
+};
+
+// Map
+
+map.on('click', function (e) {
+    if (addingWaypoint && mode == 'navigation') {
+        var id = "id-" + currID;
+        var latlong = e.latlng;
+
+        waypointList.push({
+            "latlong": [latlong.lat, latlong.lng],
+            "id": id
+        });
+
+        updateWaypointList(waypointList);
+        updatePath();
+
+        currID++;
+        $(".removeWaypointBtn").click(function (event) {
+            $(this).closest("li").remove();
+        });
+    }
+    if (addingCoverageArea && mode == 'exploration') {
+        var id = "id-CA-" + currCoverageAreaPointID;
+        var latlong = e.latlng;
+
+        coverageAreaList.push({
+            "latlong": [latlong.lat, latlong.lng],
+            "id": id
+        });
+
+        updateCoverageAreaList(coverageAreaList);
+        updatePolygon();
+
+        currCoverageAreaPointID++;
+        $(".removeCoverageAreaBtn").click(function (event) {
+            $(this).closest("li").remove();
+        });
+    }
+    $('.coverageAreaItem.active').removeClass("active");
+});
+
+/// Other functions
 
 var publishWaypoint = function(waypoints) {
     let currentTime = new Date();
@@ -527,3 +703,20 @@ var unsubscribeTelemetryListener = function() {
     })
     telemetryListenerList.length = 0; // clear array
 };
+
+/// Initialize
+
+updateWaypointList(waypointList);
+
+var polyline = L.polyline([], {weight: 6, opacity: 1, color: '#03989e'}).addTo(map);
+
+var decorator = L.polylineDecorator(polyline, {
+    patterns: [
+        // defines a pattern of 10px-wide dashes, repeated every 100px on the line
+        {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 6, pathOptions: {fillOpacity: 0.3, weight: 0, color: '#222'}})}
+    ]
+}).addTo(map);
+
+updatePath();
+
+var polygon = L.polygon([]).addTo(map);

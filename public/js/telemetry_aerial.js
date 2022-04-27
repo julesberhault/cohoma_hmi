@@ -57,7 +57,7 @@ var altitude = new RadialGauge({
     width: 150,
     height: 140,
     minValue: 0,
-    maxValue: 14,
+    maxValue: 10,
     title:"Altitude",
     colorTitle: "#eee",
     units: "m",
@@ -65,29 +65,24 @@ var altitude = new RadialGauge({
     colorMajorTicks: "#ddd",
     colorMinorTicks: "#ccc",
     colorNumbers: "#eee",
-    minValue: 0,
-    maxValue: 14,
-    ticksAngle: 270,
-    startAngle: 45,
+    ticksAngle: 360,
+    startAngle: 180,
     majorTicks: [
         "0",
+        "1",
         "2",
+        "3",
         "4",
+        "5",
         "6",
+        "7",
         "8",
-        "10",
-        "12",
-        "14"
+        "9",
+        "0",
     ],
     minorTicks: 4,
-    strokeTicks: true,
-    highlights: [
-        {
-            "from": 10,
-            "to": 14,
-            "color": "#a22"
-        }
-    ],
+    strokeTicks: false,
+    highlights: false,
     colorPlate: "#333",
     colorPlateEnd: "#222",
     borderShadowWidth: 0,
@@ -108,6 +103,7 @@ var altitude = new RadialGauge({
     colorBorderInner: "#222",
     colorBorderMiddle: "#333",
     colorBorderOuter: "#222",
+    useMinPath: true,
     animation: false
 }).draw();
 
@@ -116,33 +112,30 @@ var velocity = new RadialGauge({
     width: 150,
     height: 140,
     minValue: 0,
-    maxValue: 56,
+    maxValue: 60,
     title:"Vitesse",
     colorTitle: "#666",
     units: "km/h",
     colorUnits: "#666",
     colorMajorTicks: "#666",
     colorMinorTicks: "#777",
-    minValue: 0,
-    maxValue: 56,
     ticksAngle: 270,
     startAngle: 45,
     majorTicks: [
         "0",
-        "8",
-        "16",
-        "24",
-        "32",
+        "10",
+        "20",
+        "30",
         "40",
-        "48",
-        "56"
+        "50",
+        "60",
     ],
     minorTicks: 4,
     strokeTicks: true,
     highlights: [
         {
             "from": 40,
-            "to": 56,
+            "to": 60,
             "color": "#bbb"
         }
     ],
@@ -167,3 +160,10 @@ var velocity = new RadialGauge({
 }).draw();
 
 var state = new String();
+
+var refreshCompass = function(heading)
+{
+    // Heading angle in degrees taking value from -180° to 180°
+    if (heading < 0.0) { compass.value = 360.0+heading; }
+    else { compass.value = heading; }
+}

@@ -14,7 +14,7 @@ block content
                     ol.list-group.list-group-numbered.pt-1#waypointListGroup
                     .collapse#addingWaypointCancelCollapse
                         .pt-1
-                        .card.text-center.pt-1
+                        .card.text-center
                             .card-title
                                 .card-text Cliquer sur la carte pour ajouter
                                     .row.px-2.pt-1
@@ -39,7 +39,26 @@ block content
             .collapse#explorationModeCollapse
                 .py-1
                     .card.card-body
-                        | Exploration Mode
+                        |   Renseignez un polygone convexe à explorer pour générer une trajectoire en boustrophédon permettant de couvrir cette zone.
+                    ol.list-group.list-group-numbered.pt-1#coverageAreaListGroup
+                    .collapse#addingCoverageAreaCancelCollapse
+                        .pt-1
+                        .card.text-center
+                            .card-title
+                                .card-text Cliquer sur la carte pour ajouter
+                                    .row.px-2.pt-1
+                                        .col.pr-1
+                                            button(type='button').btn.btn-danger.btn-block.disabled#clearCoverageAreaList Effacer zone
+                                        .col.pl-1
+                                            button(type='button').btn.btn-secondary.btn-block#addCoverageAreaCancel Terminer
+                    .collapse.show#addingCoverageAreaCollapse
+                        .pt-1
+                            lu.list-group
+                                li.list-group-item.d-flex.justify-content-between.align-items-center#addElement Modifier la zone d'exploration
+                                    button(type='button').btn#addingCoverageAreaBtn
+                                        img(src='../css/images/plus.svg')
+                    .pt-1
+                        button(type='button').btn.btn-secondary.btn-block.disabled#submitCoverageArea Générer trajectoire
             .collapse#tasksModeCollapse
                 .py-1
                     .card.card-body
@@ -60,28 +79,25 @@ block content
                         img.img-fluid.rounded(id='videoStreamImg' src='../css/images/placeholder.png')
                 .pt-1
                     .row.remove-height
-                        .col-6
+                        .col-6.d-flex.align-items-center.justify-content-center
                             canvas#compass
-                        .col-6
+                        .col-6.d-flex.align-items-center.justify-content-center
                             canvas#velocity
+                .pt-1
                     .row.remove-height
-                        .col-6
+                        .col-6.d-flex.align-items-center.justify-content-center
                             canvas#altitude
-                        .col-6
-                            .card.text-center(style='height: 100%')
-                                .card-header Situation de vol
-                                .card-body
-                                    .card-text
-                                        .h3 #[.badge.text-wrap.bg-primary.text-white#droneState]
-                    script(src='/js/telemetry_aerial.js')
+                        .col-6.d-flex.align-items-center.justify-content-center
+                            .h3 #[.badge.text-wrap.bg-dark.text-white#droneState]
+                .pt-2
+                script(src='/js/telemetry_aerial.js')
     .row.border-bottom.shadow.py-2
         .col.px-2
             .collapse.show#takeOffCollapse
                 button(type='button').btn.btn-secondary.btn-block#takeOffBtn Décollage
-            .collapse#takeOffCollapse
-                .pt-1
+            .collapse#landCollapse
                 button(type='button').btn.btn-secondary.btn-block#landBtn Attérissage
             .pt-1
-            button(type='button').btn.btn-outline-danger.btn-block#emergencyStop Arrêt d'urgence
+                button(type='button').btn.btn-outline-danger.btn-block#emergencyStop Arrêt d'urgence
 
     script(src='/js/satellite3.js')
