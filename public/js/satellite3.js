@@ -9,6 +9,7 @@ var currID = 0;
 var cameraDisplay = false;
 var missionLaunched = false;
 var eStopOn = false;
+//var altitude = 3;
 
 var telemetryListenerList = [];
 
@@ -53,7 +54,7 @@ var altitudeListener = new ROSLIB.Topic({
 
 altitudeListener.subscribe(function(message) {
     let altitude_m = message.pose.position.altitude;
-    altitude.value = Math.abs(altitude_m.toFixed(2));
+    altitude_gauge.value = Math.abs(altitude_m.toFixed(2));
 });
 telemetryListenerList.push(altitudeListener);
 
@@ -152,7 +153,7 @@ var waypointPub = new ROSLIB.Topic({
 
 var submitMissionClient = new ROSLIB.Service({
     ros : ros3,
-    name : '/mission/push_mission',
+    name : 'mission/push_mission',
     serviceType : 'anafi_control/PushMission'
 });
 
@@ -172,6 +173,12 @@ var takeOffLandClient = new ROSLIB.Service({
     ros : ros3,
     name : '/take_off_land',
     serviceType : 'anafi_base/TakeOffLand'
+});
+
+var pathNavigationClient = new ROSLIB.Service({
+    ros : ros3,
+    name : 'mission/path_navigation',
+    serviceType : 'anafi_control/PathNavigation'
 });
 
 /// Mode selection Navigation | Exploration | Tasks
@@ -310,7 +317,7 @@ $("#submitWaypointList").click(function (event) {
             position : {
                 latitude : w.latlong[0],
                 longitude : w.latlong[1],
-                altitude : 0.0
+                altitude : altitude.getValue(0)
             },
             trap_clearance : false,
             reached : false
@@ -325,14 +332,16 @@ $("#submitWaypointList").click(function (event) {
 
     if (missionLaunched) {
         let request = new ROSLIB.ServiceRequest();
-        abortMissionClient.callService(request, function(result) {
+        pathNavigationClient.callService(request, function(result) {
             missionLaunched = false;
             $('#launchMissionBtn').removeClass('disabled');
             $('#abortMissionBtn').addClass('disabled');
         });
     };
 
-    submitMissionClient.callService(request, function(result) {
+    pathNavigationClient.callService(request, function(result) {
+        console.log("1");
+        console.log(result.success);
         if (result.success){
             sendWaypoint(hmiWaypoints);
             $('#launchMissionBtn').removeClass('disabled');
@@ -344,9 +353,13 @@ $("#submitWaypointList").click(function (event) {
 });
 
 $("#launchMissionBtn").click(function (event) {
+    console.log("3");
+    console.log(missionLaunched);
     if (!missionLaunched){
         let request = new ROSLIB.ServiceRequest();
         launchMissionClient.callService(request, function(result) {
+            console.log("2");
+            console.log(result.success);
             if (result.success){
                 missionLaunched = true;
                 $('#launchMissionBtn').addClass('disabled');
@@ -369,24 +382,21 @@ $("#abortMissionBtn").click(function (event) {
 
 $("#takeOff").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
-    console.log("TO");
     if(state == "LANDED"){
-        console.log("TO1");
+        console.log("Taking Off");
         let request = new ROSLIB.ServiceRequest({
             str : "take_off"
         });
-        console.log("TO2");
         takeOffLandClient.callService(request, function(result) {
             console.log(result.str);
         });
-        console.log("TO3");
     };
 });
 
 $("#land").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
-    console.log("L");
     if(state != "LANDED"){
+        console.log("Landing");
         let request = new ROSLIB.ServiceRequest({
             str : "land"
         });
@@ -512,7 +522,7 @@ var publishWaypoint = function(waypoints) {
             position : {
                 latitude : w.latlong[0],
                 longitude : w.latlong[1],
-                altitude : 0.0
+                altitude : altitude.getValue(0)
             },
             trap_clearance : false,
             reached : false

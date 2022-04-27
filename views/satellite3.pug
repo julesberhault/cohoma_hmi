@@ -11,6 +11,7 @@ block content
             .collapse#navigationModeCollapse
                 .py-1
                     button(type='button').btn.btn-outline-secondary.btn-block#refreshMission Rafraichir mission
+                    canvas#alti
                     ol.list-group.list-group-numbered.pt-1#waypointListGroup
                     .collapse#addingWaypointCancelCollapse
                         .pt-1
@@ -65,7 +66,7 @@ block content
                         .col-6
                             canvas#velocity
                         .col-6
-                            canvas#altitude
+                            canvas#altitude_gauge
                         .col-6
                             canvas(
                                 id="state"

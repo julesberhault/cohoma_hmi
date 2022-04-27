@@ -52,8 +52,8 @@ var compass = new RadialGauge({
     animationDuration: 20
 }).draw();
 
-var altitude = new RadialGauge({
-    renderTo: 'altitude',
+var altitude_gauge = new RadialGauge({
+    renderTo: 'altitude_gauge',
     width: 150,
     height: 140,
     minValue: 0,
@@ -164,3 +164,18 @@ var velocity = new RadialGauge({
 
 var state = new String();
 //var state = "";
+
+var altitude = new CanvasSlider({
+    canvas: "alti",
+    range: {min: 0, max: 30, count: 6},
+    start: [3],
+    snapToTicks: false,
+    showLabels: true,
+    showMajorTicks: true,
+    showMinorTicks: false,
+    showToolTip: true,
+    showValueBox: false,
+    format: {decimals: 1, prefix: "", suffix: " m"},
+    handle: {shape: "ellipse", w: 20, h: 20, hue: 240},
+    baseColor: {h: 207, s: 60, v: 100}
+});
