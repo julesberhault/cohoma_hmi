@@ -2,7 +2,7 @@ extends dashboard
 block content
     .row.border-top.pt-2.pb-1
         .col.px-2
-            div.btn-group.btn-block(role='group' aria-label='modeSelector')
+            div.btn-group.d-flex(role='group' aria-label='modeSelector')
                 label.btn.btn-outline-primary.my-0(for='navigationModeBtn' id='navigationModeLabel') #[input.btn-check(type='radio' name='mode' id='navigationModeBtn' autocomplete='off')] Navigation
                 label.btn.btn-outline-primary.my-0(for='explorationModeBtn' id='explorationModeLabel') #[input.btn-check(type='radio' name='mode' id='explorationModeBtn' autocomplete='off')] Exploration
                 label.btn.btn-outline-primary.my-0(for='tasksModeBtn' id='tasksModeLabel') #[input.btn-check(type='radio' name='mode' id='tasksModeBtn' autocomplete='off')] Tâches
@@ -10,18 +10,21 @@ block content
         .col.px-2
             .collapse#navigationModeCollapse
                 .py-1
-                    button(type='button').btn.btn-outline-secondary.btn-block#refreshMission Rafraichir mission
-                    ol.list-group.list-group-numbered.pt-1#waypointListGroup
+                    .d-grid
+                        button(type='button').btn.btn-outline-secondary#refreshMission Rafraichir mission
+                    li.list-group.pt-1#waypointListGroup
                     .collapse#addingWaypointCancelCollapse
                         .pt-1
-                        .card.text-center.pt-1
+                        .card.text-center
                             .card-title
                                 .card-text Cliquer sur la carte pour ajouter
                                     .row.px-2.pt-1
-                                        .col.pr-1
-                                            button(type='button').btn.btn-danger.btn-block.disabled#clearWaypointList Effacer tout
-                                        .col.pl-1
-                                            button(type='button').btn.btn-secondary.btn-block#addWaypointCancel Terminer
+                                        .col-6.pr-1
+                                            .d-grid
+                                                button(type='button').btn.btn-danger.disabled#clearWaypointList Effacer tout
+                                        .col-6.pl-1
+                                            .d-grid
+                                                button(type='button').btn.btn-secondary#addWaypointCancel Terminer
                     .collapse.show#addingWaypointCollapse
                         .pt-1
                             lu.list-group
@@ -30,23 +33,48 @@ block content
                                         img(src='../css/images/plus.svg')
                         .collapse.show#submitMissionCollapse
                             .pt-1
-                                button(type='button').btn.btn-secondary.btn-block.disabled#submitWaypointList Envoyer mission
+                                .d-grid
+                                    button(type='button').btn.btn-secondary.disabled#submitWaypointList Envoyer mission
                         .collapse#launchMissionCollapse
                             .pt-1
-                                button(type='button').btn.btn-success.btn-block#launchMissionBtn Lancer mission
+                                .d-grid
+                                    button(type='button').btn.btn-success#launchMissionBtn Lancer mission
                         .pt-1
-                            button(type='button').btn.btn-danger.btn-block#abortMissionBtn Arrêter mission
+                            .d-grid
+                                button(type='button').btn.btn-danger#abortMissionBtn Arrêter mission
             .collapse#explorationModeCollapse
                 .py-1
                     .card.card-body
-                        | Exploration Mode
+                        |   Renseignez un polygone convexe à explorer pour générer une trajectoire en boustrophédon permettant de couvrir cette zone.
+                    li.list-group.pt-1#coverageAreaListGroup
+                    .collapse#addingCoverageAreaCancelCollapse
+                        .pt-1
+                        .card.text-center
+                            .card-title
+                                .card-text Cliquer sur la carte pour ajouter
+                                    .row.px-2.pt-1
+                                        .col.pr-1
+                                            .d-grid
+                                                button(type='button').btn.btn-danger.disabled#clearCoverageAreaList Effacer zone
+                                        .col.pl-1
+                                            .d-grid
+                                                button(type='button').btn.btn-secondary#addCoverageAreaCancel Terminer
+                    .collapse.show#addingCoverageAreaCollapse
+                        .pt-1
+                            lu.list-group
+                                li.list-group-item.d-flex.justify-content-between.align-items-center#addElement Modifier la zone d'exploration
+                                    button(type='button').btn#addingCoverageAreaBtn
+                                        img(src='../css/images/plus.svg')
+                    .pt-1
+                        .d-grid
+                            button(type='button').btn.btn-secondary.disabled#submitCoverageArea Générer trajectoire
             .collapse#tasksModeCollapse
                 .py-1
                     .card.card-body
                         | Tasks mode
     .row.pt-2.pb-1
         .col.px-2
-            label.btn.btn-outline-primary.btn-block.my-0(for='telemetryModeBtn' id='telemetryModeLabel') #[input.btn-check(type='radio' name='mode' id='telemetryModeBtn' autocomplete='off')] Télémétrie
+            label.btn.btn-outline-primary.d-grid.my-0(for='telemetryModeBtn' id='telemetryModeLabel') #[input.btn-check(type='radio' name='mode' id='telemetryModeBtn' autocomplete='off')] Télémétrie
     .row.border-bottom.shadow.pb-1
         .col.px-2
             .collapse#telemetryModeCollapse
@@ -54,19 +82,34 @@ block content
                     .progress(style='height: 40px;')
                         .progress-bar.bg-success.progress-bar-striped.progress-bar-animated(role='progressbar' style='width: 0%;' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100')#battery Batterie
                 .pt-1
-                    label.btn.btn-outline-secondary.btn-block(for='displayCameraBtn' id='displayCameraLabel') #[input(type='checkbox' id='displayCameraBtn' autocomplete='off')] Caméra embarquée
+                    label.btn.btn-outline-secondary.d-grid(for='displayCameraBtn' id='displayCameraLabel') #[input(type='checkbox' id='displayCameraBtn' autocomplete='off')] Caméra embarquée
                 .collapse#displayCameraCollapse
                     .pt-1
                         img.img-fluid.rounded(id='videoStreamImg' src='../css/images/placeholder.png')
                 .pt-1
-                    .row.pr-2.remove-height
-                        .col-6
+                    .row.remove-height
+                        .col-6.d-flex.align-items-center.justify-content-center
                             canvas#compass
-                        .col-6
+                        .col-6.d-flex.align-items-center.justify-content-center
                             canvas#velocity
-                    script(src='/js/telemetry.js')
+                .pt-1
+                    .row.remove-height
+                        .col-6.d-flex.align-items-center.justify-content-center
+                            canvas#altitude
+                        .col-6.d-flex.align-items-center.justify-content-center
+                            .h3 #[.badge.text-wrap.bg-dark.text-white#droneState]
+                .pt-2
+                script(src='/js/telemetry_aerial.js')
     .row.border-bottom.shadow.py-2
         .col.px-2
-            button(type='button').btn.btn-outline-danger.btn-block#emergencyStop Arrêt d'urgence
+            .collapse.show#takeOffCollapse
+                .d-grid
+                    button(type='button').btn.btn-secondary#takeOffBtn Décollage
+            .collapse#landCollapse
+                .d-grid
+                    button(type='button').btn.btn-secondary#landBtn Attérissage
+            .pt-1
+                .d-grid
+                    button(type='button').btn.btn-outline-danger#emergencyStop Arrêt d'urgence
 
     script(src='/js/satellite1.js')

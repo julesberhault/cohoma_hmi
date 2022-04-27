@@ -461,8 +461,6 @@ var unsubscribeTelemetryListener = function() {
 
 /// Initialize
 
-updateWaypointList(waypointList);
-
 var polyline = L.polyline([], {weight: 6, opacity: 1, color: '#fc0'}).addTo(map);
 
 var decorator = L.polylineDecorator(polyline, {
@@ -472,4 +470,5 @@ var decorator = L.polylineDecorator(polyline, {
     ]
 }).addTo(map);
 
+updateWaypointList(waypointList);
 updatePath();

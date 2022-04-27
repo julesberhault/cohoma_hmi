@@ -12,6 +12,7 @@ var missionLaunched = false;
 var eStopOn = false;
 var addingCoverageArea = false;
 var coverageAreaList = [];
+var state = new String;
 
 var telemetryListenerList = [];
 
@@ -164,9 +165,9 @@ var waypointPub = new ROSLIB.Topic({
     messageType : 'anafi_control/MissionPlan'
 });
 
-var submitMissionClient = new ROSLIB.Service({
+var pushMissionClient = new ROSLIB.Service({
     ros : ros3,
-    name : '/mission/push_mission',
+    name : 'mission/push_mission',
     serviceType : 'anafi_control/PushMission'
 });
 
@@ -298,18 +299,19 @@ $("#submitWaypointList").click(function (event) {
     let secs = Math.floor(currentTime.getTime()/1000);
     let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
 
+    let input_altitude = document.getElementById("altitudeInput").value;
+
     waypointList.forEach(w => {
         hmiWaypoints.push({
             "latlong": w.latlong,
             "id": "id" + id
         });
         id++;
-
         let wayPoint = new ROSLIB.Message({
             position : {
                 latitude : w.latlong[0],
                 longitude : w.latlong[1],
-                altitude : 0.0
+                altitude : input_altitude
             },
             trap_clearance : false,
             reached : false
@@ -331,7 +333,9 @@ $("#submitWaypointList").click(function (event) {
         });
     };
 
-    submitMissionClient.callService(request, function(result) {
+    pushMissionClient.callService(request, function(result) {
+        console.log("1");
+        console.log(result.success);
         if (result.success){
             sendWaypoint(hmiWaypoints);
             $('#launchMissionBtn').removeClass('disabled');
@@ -343,9 +347,13 @@ $("#submitWaypointList").click(function (event) {
 });
 
 $("#launchMissionBtn").click(function (event) {
+    console.log("3");
+    console.log(missionLaunched);
     if (!missionLaunched){
         let request = new ROSLIB.ServiceRequest();
         launchMissionClient.callService(request, function(result) {
+            console.log("2");
+            console.log(result.success);
             if (result.success){
                 missionLaunched = true;
                 $('#launchMissionBtn').addClass('disabled');
@@ -671,12 +679,13 @@ var publishWaypoint = function(waypoints) {
     let cohomaWaypoints = [];
     let secs = Math.floor(currentTime.getTime()/1000);
     let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
+    let input_altitude = document.getElementById("altitudeInput").value;
     waypoints.forEach(w => {
         let wayPoint = new ROSLIB.Message({
             position : {
                 latitude : w.latlong[0],
                 longitude : w.latlong[1],
-                altitude : 0.0
+                altitude : input_altitude
             },
             trap_clearance : false,
             reached : false
@@ -706,8 +715,6 @@ var unsubscribeTelemetryListener = function() {
 
 /// Initialize
 
-updateWaypointList(waypointList);
-
 var polyline = L.polyline([], {weight: 6, opacity: 1, color: '#03989e'}).addTo(map);
 
 var decorator = L.polylineDecorator(polyline, {
@@ -717,6 +724,7 @@ var decorator = L.polylineDecorator(polyline, {
     ]
 }).addTo(map);
 
-updatePath();
-
 var polygon = L.polygon([]).addTo(map);
+
+updateWaypointList(waypointList);
+updatePath();
