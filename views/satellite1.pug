@@ -1,12 +1,12 @@
 extends dashboard
 block content
-    .row.border-top.pt-2.pb-1
+    .row.border-top.pt-2.pb-1.px-1
         .col.px-2
             div.btn-group.d-flex(role='group' aria-label='modeSelector')
                 label.btn.btn-outline-primary.my-0(for='navigationModeBtn' id='navigationModeLabel') #[input.btn-check(type='radio' name='mode' id='navigationModeBtn' autocomplete='off')] Navigation
                 label.btn.btn-outline-primary.my-0(for='explorationModeBtn' id='explorationModeLabel') #[input.btn-check(type='radio' name='mode' id='explorationModeBtn' autocomplete='off')] Exploration
                 label.btn.btn-outline-primary.my-0(for='tasksModeBtn' id='tasksModeLabel') #[input.btn-check(type='radio' name='mode' id='tasksModeBtn' autocomplete='off')] Tâches
-    .row.border-bottom.shadow.pb-1
+    .row.border-bottom.shadow.pb-1.px-1
         .col.px-2
             .collapse#navigationModeCollapse
                 .py-1
@@ -72,10 +72,10 @@ block content
                 .py-1
                     .card.card-body
                         | Tasks mode
-    .row.pt-2.pb-1
+    .row.pt-2.pb-1.px-1
         .col.px-2
             label.btn.btn-outline-primary.d-grid.my-0(for='telemetryModeBtn' id='telemetryModeLabel') #[input.btn-check(type='radio' name='mode' id='telemetryModeBtn' autocomplete='off')] Télémétrie
-    .row.border-bottom.shadow.pb-1
+    .row.border-bottom.shadow.pb-1.px-1
         .col.px-2
             .collapse#telemetryModeCollapse
                 .pt-1
@@ -93,14 +93,8 @@ block content
                         .col-6.d-flex.align-items-center.justify-content-center
                             canvas#velocity
                 .pt-1
-                    .row.remove-height
-                        .col-6.d-flex.align-items-center.justify-content-center
-                            canvas#altitude
-                        .col-6.d-flex.align-items-center.justify-content-center
-                            .h3 #[.badge.text-wrap.bg-dark.text-white#droneState]
-                .pt-2
-                script(src='/js/telemetry_aerial.js')
-    .row.border-bottom.shadow.py-2
+                script(src='/js/telemetry.js')
+    .row.border-bottom.shadow.py-2.px-1
         .col.px-2
             .collapse.show#takeOffCollapse
                 .d-grid

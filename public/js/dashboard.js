@@ -1,7 +1,7 @@
 mapSetted = false;
 var selectedSatellite = 0; // 0 is for general
 var cycleNumber = 5;
-var centeredLocation
+var centeredLocation;
 var zoomLevel = 18;
 
 var satellite1Pos = {lat: 0., lng: 0., hea: 0.};
@@ -13,11 +13,11 @@ var satellite4Pos = {lat: 0., lng: 0., hea: 0.};
 
 var defaultLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
 	maxZoom: 20,
-	attribution: '&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	attribution: '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 });
 
 var satelliteLayer = L.tileLayer('https://wxs.ign.fr/{apikey}/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE={style}&TILEMATRIXSET=PM&FORMAT={format}&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
-	attribution: '<a target="_blank" href="https://www.geoportail.gouv.fr/">Geoportail France</a>',
+	attribution: '<a href="https://www.geoportail.gouv.fr/">Geoportail France</a>',
 	bounds: [[-75, -180], [81, 180]],
 	minZoom: 2,
 	maxZoom: 19,
@@ -131,9 +131,9 @@ var blueDotIcon = L.icon({
 // ROS
 
 var ros1 = new ROSLIB.Ros({url : 'ws://11.0.0.3:9090'})
-var ros2 = new ROSLIB.Ros({url : 'ws://11.0.0.4:9090'})
+// var ros2 = new ROSLIB.Ros({url : 'ws://11.0.0.4:9090'})
 var ros3 = new ROSLIB.Ros({url : 'ws://147.250.35.110:9090'})
-var ros4 = new ROSLIB.Ros({url : 'ws://11.0.0.14:9090'})
+// var ros4 = new ROSLIB.Ros({url : 'ws://11.0.0.14:9090'})
 
 var compassListenerSat1 = new ROSLIB.Topic({
     ros : ros1,
@@ -189,6 +189,9 @@ compassListenerSat1.subscribe(function(message){
     let qz = message.pose.pose.orientation.z;
     satellite1Pos.hea = 90.0-180.0*Math.atan2(2.0*(qw*qz+qx+qy), 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite1Marker.setRotationAngle(satellite1Pos.hea/2.0);
+    if (selectedSatellite = 1) {
+        compass.value = satellite1Pos.hea;
+    }
     refreshCompass(satellite1Pos.hea);
 })
 var i1 = 0;
@@ -245,7 +248,9 @@ compassListenerSat3.subscribe(function(message){
     let qz = message.orientation.z;
     satellite3Pos.hea = 180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite3Marker.setRotationAngle(satellite3Pos.hea/2.0);
-    refreshCompass(satellite3Pos.hea);
+    if (selectedSatellite = 3) {
+        compass.value = satellite3Pos.hea;
+    }
 })
 
 var i3 = 0;
