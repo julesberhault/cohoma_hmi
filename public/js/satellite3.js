@@ -71,7 +71,7 @@ var droneStateList = {"LANDED" : "Au sol", "TAKINGOFF" : "Décollage", "LANDING"
 stateListener.subscribe(function(message) {
     droneState = message.data;
     document.getElementById("droneState").innerHTML = droneStateList[droneState];
-    console.log(droneState)
+    
     switch (droneState) {
         case "HOVERING":
             $('#takeOffCollapse').collapse('hide');
@@ -263,7 +263,7 @@ $('#addWaypointCancel').click(function (event) {
 $('#clearWaypointList').click(function (event) {
     if (!$('#clearWaypointList').hasClass('disabled')){
         waypointList.forEach(element => {
-            map.removeLayer(element.marker);
+            element.marker.removeFrom(map);
         });
         currID = 0;
         waypointList = [];
@@ -408,7 +408,7 @@ var removeWaypoint = function (event) {
     var k = 0;
     waypointList.forEach(element => {
         if (id == element.id) {
-            map.removeLayer(element.marker);
+            element.marker.removeFrom(map);
             k = i;
         }
         i++;
@@ -440,7 +440,7 @@ var updateWaypointList = function (waypoints) {
     // wps must contain an id and a latlong array at the bare minimum
     waypointList.forEach(element => {
         if (element.marker) {
-            map.removeLayer(element.marker);
+            element.marker.removeFrom(map);
         }
     });
     waypointList = [];
@@ -475,7 +475,7 @@ var updateWaypointList = function (waypoints) {
                     $('#' + w.id).addClass("active");
                 });
             }
-            map.addLayer(w.marker);
+            w.marker.addTo(map);
             waypointList.push(w);
         });
     }
@@ -494,7 +494,7 @@ var updateWaypointList = function (waypoints) {
     $('#launchMissionBtn').addClass('disabled');
 }
 
-// Exploration
+/// Exploration
 
 $("#submitCoverageArea").click(function (event) {
     let hmiCoverageArea = [];
@@ -554,7 +554,7 @@ $('#addCoverageAreaCancel').click(function (event) {
 $('#clearCoverageAreaList').click(function (event) {
     if (!$('#clearCoverageAreaList').hasClass('disabled')){
         coverageAreaList.forEach(element => {
-            map.removeLayer(element.marker);
+            element.marker.removeFrom(map);
         });
         currCoverageAreaPointID = 0;
         coverageAreaList = [];
@@ -604,7 +604,7 @@ var updateCoverageAreaList = function (coverageAreaPoints) {
                     $('#' + p.id).addClass("active");
                 });
             }
-            map.addLayer(p.marker);
+            p.marker.addTo(map);
             coverageAreaList.push(p);
         });
     }
@@ -625,7 +625,7 @@ var removeCoverageArea = function (event) {
     var k = 0;
     coverageAreaList.forEach(element => {
         if (id == element.id) {
-            map.removeLayer(element.marker);
+            element.marker.removeFrom(map);
             k = i;
         }
         i++;
@@ -723,16 +723,13 @@ var unsubscribeTelemetryListener = function() {
 
 /// Initialize
 
-var polyline = L.polyline([], {weight: 6, opacity: 1, color: '#03989e'}).addTo(map);
+var polyline = L.polyline([], {weight: 6, opacity: 1, color: '#0aa'}).addTo(map);
 
 var decorator = L.polylineDecorator(polyline, {
     patterns: [
         // defines a pattern of 10px-wide dashes, repeated every 100px on the line
-        {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 6, pathOptions: {fillOpacity: 0.3, weight: 0, color: '#222'}})}
+        {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 6, pathOptions: {fillOpacity: 1, weight: 0, color: '#fff'}})}
     ]
 }).addTo(map);
 
 var polygon = L.polygon([]).addTo(map);
-
-updateWaypointList(waypointList);
-updatePath();
