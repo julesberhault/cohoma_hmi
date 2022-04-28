@@ -71,25 +71,29 @@ var droneStateList = {"LANDED" : "Au sol", "TAKINGOFF" : "Décollage", "LANDING"
 stateListener.subscribe(function(message) {
     droneState = message.data;
     document.getElementById("droneState").innerHTML = droneStateList[droneState];
-    if (droneState in ["HOVERING", "FLYING"]) {
-        $("#landBtn").removeChild($("#landLoading"));
-        $('#takeOffCollapse').collapse('hide');
-        $('#landCollapse').collapse('show');
-        $("#landBtn").removeClass("disabled")
-    }
-    if (droneState in ["LANDED"]) {
-        $("#takeOffBtn").removeChild($("#takeOffLoading"));
-        $('#takeOffCollapse').collapse('show');
-        $('#landCollapse').collapse('hide');
-        $("#takeOffBtn").removeClass("disabled")
-    }
-    else {
-        $("#landBtn").appendChild(document.createElement('<span class="spinner-grow spinner-grow-sm" id="landLoading" role="status" aria-hidden="true"></span>'));
-        $("#landBtn").addClass("disabled")
-        $("#takeOffBtn").appendChild(document.createElement('<span class="spinner-grow spinner-grow-sm" id="takeOffLoading" role="status" aria-hidden="true"></span>'));
-        $("#takeOffBtn").addClass("disabled")
+    console.log(droneState)
+    switch (droneState) {
+        case "HOVERING":
+            $('#takeOffCollapse').collapse('hide');
+            $('#landCollapse').collapse('show');
+            $("#landBtn").removeClass("disabled")
+            break;
+        case "LANDED":
+            $('#takeOffCollapse').collapse('show');
+            $('#landCollapse').collapse('hide');
+            $("#takeOffBtn").removeClass("disabled")
+            break;
+        case "LANDING":
+            $("#landBtn").addClass("disabled")
+            break;
+        case "MOTOR_RAMPING":
+            $("#takeOffBtn").addClass("disabled")
+            break;
+        default:
+            break;
     }
 });
+
 telemetryListenerList.push(stateListener);
 
 var videoStreamListener = new ROSLIB.Topic({
@@ -162,13 +166,13 @@ telemetryListenerList.push(huskyStatusListener);
 var waypointPub = new ROSLIB.Topic({
     ros : ros3,
     name : '/mission/mission_plan',
-    messageType : 'anafi_control/MissionPlan'
+    messageType : 'anafi_base/MissionPlan'
 });
 
 var pushMissionClient = new ROSLIB.Service({
     ros : ros3,
     name : 'mission/push_mission',
-    serviceType : 'anafi_control/PushMission'
+    serviceType : 'anafi_base/PushMission'
 });
 
 var launchMissionClient = new ROSLIB.Service({
@@ -183,16 +187,22 @@ var abortMissionClient = new ROSLIB.Service({
     serviceType : 'std_srvs/Empty'
 });
 
-var takeOffLandClient = new ROSLIB.Service({
+var takeOffClient = new ROSLIB.Service({
     ros : ros3,
-    name : '/take_off_land',
-    serviceType : 'anafi_base/TakeOffLand'
+    name : '/take_off',
+    serviceType : 'std_srvs/Trigger'
+});
+
+var landClient = new ROSLIB.Service({
+    ros : ros3,
+    name : '/land',
+    serviceType : 'std_srvs/Trigger'
 });
 
 var submitCoverageArea = new ROSLIB.Service({
     ros : ros3,
     name : '/mission/coverage_area',
-    serviceType : 'anafi_control/CoverageArea'
+    serviceType : 'anafi_base/CoverageArea'
 });
 
 /// Mode selection Navigation | Exploration | Tasks
@@ -311,7 +321,7 @@ $("#submitWaypointList").click(function (event) {
             position : {
                 latitude : w.latlong[0],
                 longitude : w.latlong[1],
-                altitude : input_altitude
+                altitude : parseFloat(input_altitude)
             },
             trap_clearance : false,
             reached : false
@@ -378,9 +388,8 @@ $("#takeOffBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
     if(droneState == "LANDED"){
         let request = new ROSLIB.ServiceRequest({
-            str : "take_off"
         });
-        takeOffLandClient.callService(request, function(result) {});
+        takeOffClient.callService(request, function(result) {});
     };
 });
 
@@ -388,9 +397,8 @@ $("#landBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
     if(droneState != "LANDED"){
         let request = new ROSLIB.ServiceRequest({
-            str : "land"
         });
-        takeOffLandClient.callService(request, function(result) {});
+        landClient.callService(request, function(result) {});
     };
 });
 
@@ -685,7 +693,7 @@ var publishWaypoint = function(waypoints) {
             position : {
                 latitude : w.latlong[0],
                 longitude : w.latlong[1],
-                altitude : input_altitude
+                altitude : parseFloat(input_altitude)
             },
             trap_clearance : false,
             reached : false
