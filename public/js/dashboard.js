@@ -146,7 +146,7 @@ var gpsListenerSat1 = new ROSLIB.Topic({
     name : '/gps/filtered',
     messageType : 'sensor_msgs/NavSatFix'
 });
-
+/*
 var compassListenerSat2 = new ROSLIB.Topic({
     ros : ros2,
     name : '/satellite2/sbg/gps_hdt',
@@ -158,7 +158,7 @@ var gpsListenerSat2 = new ROSLIB.Topic({
     name : '/satellite2/sbg/gps_pos',
     messageType : 'sbg_driver/SbgGpsPos'
 });
-
+*/
 var compassListenerSat3 = new ROSLIB.Topic({
     ros : ros3,
     name : '/anafi/imu',
@@ -170,7 +170,7 @@ var gpsListenerSat3 = new ROSLIB.Topic({
     name : '/anafi/gps',
     messageType : 'geographic_msgs/GeoPoseStamped'
 });
-
+/*
 var compassListenerSat4 = new ROSLIB.Topic({
     ros : ros4,
     name : '/satellite4/sbg/gps_hdt',
@@ -181,7 +181,7 @@ var gpsListenerSat4 = new ROSLIB.Topic({
     name : '/satellite4/sbg/gps_pos',
     messageType : 'sbg_driver/SbgGpsPos'
 });
-
+*/
 compassListenerSat1.subscribe(function(message){
     let qw = message.pose.pose.orientation.w;
     let qx = message.pose.pose.orientation.x;
@@ -213,7 +213,7 @@ gpsListenerSat1.subscribe(function(message) {
         i1++;
     }
 });
-
+/*
 compassListenerSat2.subscribe(function(message){
     satellite2Pos.hea = message.true_heading;
     satellite2Marker.setRotationAngle(satellite2Pos.hea / 2);
@@ -240,7 +240,7 @@ gpsListenerSat2.subscribe(function(message) {
         i2++;
     }
 });
-
+*/
 compassListenerSat3.subscribe(function(message){
     let qw = message.orientation.w;
     let qx = message.orientation.x;
@@ -272,7 +272,7 @@ gpsListenerSat3.subscribe(function(message) {
         i3++;
     }
 });
-
+/*
 compassListenerSat4.subscribe(function(message){
     satellite4Pos.hea = message.true_heading;
     satellite4Marker.setRotationAngle(satellite4Pos.hea / 2);
@@ -299,3 +299,5 @@ gpsListenerSat4.subscribe(function(message) {
         i4++;
     }
 });
+
+*/

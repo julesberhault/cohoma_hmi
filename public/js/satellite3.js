@@ -71,7 +71,7 @@ var droneStateList = {"LANDED" : "Au sol", "TAKINGOFF" : "Décollage", "LANDING"
 stateListener.subscribe(function(message) {
     droneState = message.data;
     document.getElementById("droneState").innerHTML = droneStateList[droneState];
-    
+
     switch (droneState) {
         case "HOVERING":
             $('#takeOffCollapse').collapse('hide');
@@ -122,33 +122,6 @@ $('#displayCameraBtn:input').change(function () {
         cameraDisplay = true;
     }
 })
-
-var eStopPublisher = new ROSLIB.Topic({
-    ros : ros3,
-    name : '/e_stop',
-    messageType : 'std_msgs/Bool'
-});
-
-$("#emergencyStop").click(function (event) {
-    if (eStopOn)
-    {
-        let eStopMsg = new ROSLIB.Message({
-            data : false
-        });
-        eStopPublisher.publish(eStopMsg);
-        eStopOn = false;
-        $('#emergencyStop').removeClass('active');
-    }
-    else
-    {
-        let eStopMsg = new ROSLIB.Message({
-            data : true
-        });
-        eStopPublisher.publish(eStopMsg);
-        eStopOn = true;
-        $('#emergencyStop').addClass('active');
-    }
-});
 
 var huskyStatusListener = new ROSLIB.Topic({
     ros: ros3,
@@ -201,8 +174,20 @@ var landClient = new ROSLIB.Service({
 
 var submitCoverageArea = new ROSLIB.Service({
     ros : ros3,
-    name : '/mission/coverage_area',
+    name : '/mission/generate_bous',
     serviceType : 'anafi_base/CoverageArea'
+});
+
+var emergencyStopClient = new ROSLIB.Service({
+    ros : ros3,
+    name : '/cancel_moveTo',
+    serviceType : 'std_srvs/Trigger'
+});
+
+var returnHomeClient = new ROSLIB.Service({
+    ros : ros3,
+    name : '/return_home',
+    serviceType : 'std_srvs/Trigger'
 });
 
 /// Mode selection Navigation | Exploration | Tasks
@@ -344,9 +329,8 @@ $("#submitWaypointList").click(function (event) {
     };
 
     pushMissionClient.callService(request, function(result) {
-        console.log("1");
-        console.log(result.success);
         if (result.success){
+            console.log("Mission pushed");
             sendWaypoint(hmiWaypoints);
             $('#launchMissionBtn').removeClass('disabled');
             $('#abortMissionBtn').addClass('disabled');
@@ -357,13 +341,10 @@ $("#submitWaypointList").click(function (event) {
 });
 
 $("#launchMissionBtn").click(function (event) {
-    console.log("3");
-    console.log(missionLaunched);
     if (!missionLaunched){
+        console.log("Mission Launched")
         let request = new ROSLIB.ServiceRequest();
         launchMissionClient.callService(request, function(result) {
-            console.log("2");
-            console.log(result.success);
             if (result.success){
                 missionLaunched = true;
                 $('#launchMissionBtn').addClass('disabled');
@@ -384,6 +365,19 @@ $("#abortMissionBtn").click(function (event) {
     };
 });
 
+$("#emergencyStop").click(function (event) {
+    let request = new ROSLIB.ServiceRequest();
+        abortMissionClient.callService(request, function(result) {
+            missionLaunched = false;
+            $('#launchMissionBtn').removeClass('disabled');
+            $('#abortMissionBtn').addClass('disabled');
+        });
+
+    request = new ROSLIB.ServiceRequest();
+        emergencyStopClient.callService(request, function(result) {
+        });
+});
+
 $("#takeOffBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
     if(droneState == "LANDED"){
@@ -393,6 +387,7 @@ $("#takeOffBtn").click(function (event) {
     };
 });
 
+
 $("#landBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
     if(droneState != "LANDED"){
@@ -401,6 +396,15 @@ $("#landBtn").click(function (event) {
         landClient.callService(request, function(result) {});
     };
 });
+
+$("#returnHome").click(function (event) {
+    //Inspirer de launch mission pour envoyer srv
+        if(droneState == "HOVERING"){
+            let request = new ROSLIB.ServiceRequest();
+            returnHomeClient.callService(request, function(result) {
+            });
+        };
+    });
 
 var removeWaypoint = function (event) {
     var id = $(this).closest("li").attr("id");
@@ -504,6 +508,7 @@ $("#submitCoverageArea").click(function (event) {
     let cohomaCoverageArea = [];
     let secs = Math.floor(currentTime.getTime()/1000);
     let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
+    let input_altitude = document.getElementById("altitudeInput").value;
 
     coverageAreaList.forEach(p => {
         hmiCoverageArea.push({
@@ -514,7 +519,7 @@ $("#submitCoverageArea").click(function (event) {
         cohomaCoverageArea.push(new ROSLIB.Message({
             latitude : p.latlong[0],
             longitude : p.latlong[1],
-            altitude : 0.0
+            altitude : parseFloat(input_altitude)
             })
         );
     });
@@ -528,13 +533,13 @@ $("#submitCoverageArea").click(function (event) {
             currID = 0;
             result.waypoints.forEach(w => {
                 coverageAreaList.push({
-                    "latlong": [w.latitude, x.longitude],
+                    "latlong": [w.position.latitude, w.position.longitude],
                     "id": "id-" + currID
                 });
                 currID++;
+            });
             updateWaypointList(coverageAreaList);
             updatePath();
-            });
         };
     });
 });
