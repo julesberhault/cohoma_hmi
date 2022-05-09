@@ -13,7 +13,7 @@ var eStopOn = false;
 var addingCoverageArea = false;
 var coverageAreaList = [];
 var state = new String;
-var qrCode= new QRCode();
+
 
 var telemetryListenerList = [];
 
@@ -37,15 +37,14 @@ socket.on("currentWaypointList", function(currentWaypointList) {
 });
 
 /// ROS
-var QRListener = new ROSLIB.Topic({
+var QRCListener = new ROSLIB.Topic({
     ros : ros3,
-    name : '/mission/qr_detect',
+    name : '/mission/qrc_detect',
     messageType : 'navigation_msgs/QRCode'
 });
 
-QRListener.subscribe(function(message) {
-    qrCode = message;
-    console.log(qrCode);
+QRCListener.subscribe(function(message) {
+    console.log(message);
 });
 
 var velocityListener = new ROSLIB.Topic({

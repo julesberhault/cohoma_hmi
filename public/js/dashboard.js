@@ -132,7 +132,8 @@ var blueDotIcon = L.icon({
 
 var ros1 = new ROSLIB.Ros({url : 'ws://11.0.0.3:9090'})
 // var ros2 = new ROSLIB.Ros({url : 'ws://11.0.0.4:9090'})
-var ros3 = new ROSLIB.Ros({url : 'ws://11.0.0.100:9090'})
+//var ros3 = new ROSLIB.Ros({url : 'ws://11.0.0.100:9090'})
+var ros3 = new ROSLIB.Ros({url : 'ws://147.250.35.196:9090'})
 // var ros4 = new ROSLIB.Ros({url : 'ws://11.0.0.14:9090'})
 
 var compassListenerSat1 = new ROSLIB.Topic({
