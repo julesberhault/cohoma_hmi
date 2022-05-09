@@ -13,6 +13,7 @@ var eStopOn = false;
 var addingCoverageArea = false;
 var coverageAreaList = [];
 var state = new String;
+var qrCode= new QRCode();
 
 var telemetryListenerList = [];
 
@@ -36,6 +37,16 @@ socket.on("currentWaypointList", function(currentWaypointList) {
 });
 
 /// ROS
+var QRListener = new ROSLIB.Topic({
+    ros : ros3,
+    name : '/mission/qr_detect',
+    messageType : 'navigation_msgs/QRCode'
+});
+
+QRListener.subscribe(function(message) {
+    qrCode = message;
+    console.log(qrCode);
+});
 
 var velocityListener = new ROSLIB.Topic({
     ros : ros3,
@@ -47,16 +58,17 @@ velocityListener.subscribe(function(message) {
     let velocity_kmh = 3.6 * (message.x + message.y);
     velocity.value = Math.abs(velocity_kmh.toFixed(2));
 });
+
 telemetryListenerList.push(velocityListener);
 
 var altitudeListener = new ROSLIB.Topic({
     ros : ros3,
-    name : '/anafi/gps',
-    messageType : 'geographic_msgs/GeoPoseStamped'
+    name : '/anafi/gnd_dist',
+    messageType : 'std_msgs/Float32'
 });
 
 altitudeListener.subscribe(function(message) {
-    let altitude_m = message.pose.position.altitude;
+    let altitude_m = message.data;
     altitude.value = Math.abs(altitude_m.toFixed(2));
 });
 telemetryListenerList.push(altitudeListener);
