@@ -4,6 +4,7 @@ var cycleNumber = 5;
 var centeredLocation;
 var zoomLevel = 18;
 
+var userPos = {lat: 0., lng: 0., hea: 0.};
 var satellite1Pos = {lat: 0., lng: 0., hea: 0.};
 var satellite2Pos = {lat: 0., lng: 0., hea: 0.};
 var satellite3Pos = {lat: 0., lng: 0., hea: 0.};
@@ -50,6 +51,17 @@ overlays = {
 L.control.layers(baseLayers, overlays).addTo(map);
 L.control.scale({imperial: false, metric: true}).addTo(map);
 map.attributionControl.setPrefix(false);
+
+var userIcon = L.icon({
+    iconUrl: "../css/images/home_blue.svg",
+    iconSize:     [50, 50],
+    iconAnchor:   [25, 25],
+    popupAnchor:  [0, 0]
+});
+
+var userMarker = new L.marker([0, 0], {
+    icon: userIcon,
+});
 
 var satellite1Icon = L.icon({
     iconUrl: "../css/images/husky_yellow_arrow.svg",
@@ -103,17 +115,6 @@ var satellite4Marker = new L.marker([0, 0], {
     rotationOrigin: "center center"
 });
 
-var aerialTrapRedIcon = L.icon({
-    iconUrl: "../css/images/aerial_trap_red.svg",
-    iconSize:     [40, 40],
-    iconAnchor:   [20, 20],
-    popupAnchor:  [0, 0]
-});
-
-var aerialTrapRedMarker = new L.marker([0, 0], {
-    icon: aerialTrapRedIcon
-});
-
 var blackDotIcon = L.icon({
     iconUrl: "../css/images/black_dot.svg",
     iconSize:     [16, 16],
@@ -130,33 +131,92 @@ var blueDotIcon = L.icon({
 
 // ROS
 
-var ros1 = new ROSLIB.Ros({url : 'ws://11.0.0.3:9090'})
-// var ros2 = new ROSLIB.Ros({url : 'ws://11.0.0.4:9090'})
-var ros3 = new ROSLIB.Ros({url : 'ws://147.250.35.110:9090'})
-// var ros4 = new ROSLIB.Ros({url : 'ws://11.0.0.14:9090'})
+var ros1 = new ROSLIB.Ros({url : 'ws://11.0.0.11:9090'})
+var ros3 = new ROSLIB.Ros({url : 'ws://11.0.0.13:9090'})
+var ros4 = new ROSLIB.Ros({url : 'ws://11.0.0.14:9090'})
+
+ros1.on('connection', function() {
+    if (selectedSatellite == 1) {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Connected to Satellite 1 established',
+            showConfirmButton: false,
+            timer: 1500
+        })
+    }
+});
+
+ros1.on('error', function(error) {
+    if (selectedSatellite == 1) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Satellite 1 lost',
+            text: 'Unable to communicate with ROS master',
+        })
+    }
+});
+
+ros3.on('connection', function() {
+    if (selectedSatellite == 3) {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Connected to Satellite 1 established',
+            showConfirmButton: false,
+            timer: 1500
+        })
+    }
+});
+
+ros3.on('error', function(error) {
+    if (selectedSatellite == 3) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Satellite 1 lost',
+            text: 'Unable to communicate with ROS master',
+        })
+    }
+});
+
+ros4.on('connection', function() {
+    if (selectedSatellite == 4) {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Connected to Satellite 1 established',
+            showConfirmButton: false,
+            timer: 1500
+        })
+    }
+});
+
+ros4.on('error', function(error) {
+    if (selectedSatellite == 4) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Satellite 1 lost',
+            text: 'Unable to communicate with ROS master',
+        })
+    }
+});
+
+var gpsListenerUser = new ROSLIB.Topic({
+    ros : ros1,
+    name : '/user/navsat/fix',
+    messageType : 'sensor_msgs/NavSatFix'
+});
 
 var compassListenerSat1 = new ROSLIB.Topic({
     ros : ros1,
-    name : '/odometry/filtered_map',
-    messageType : 'nav_msgs/Odometry'
+    name : '/imu/data',
+    messageType : 'sensor_msgs/Imu'
 });
 
 var gpsListenerSat1 = new ROSLIB.Topic({
     ros : ros1,
     name : '/gps/filtered',
     messageType : 'sensor_msgs/NavSatFix'
-});
-
-var compassListenerSat2 = new ROSLIB.Topic({
-    ros : ros2,
-    name : '/satellite2/sbg/gps_hdt',
-    messageType : 'sbg_driver/SbgGpsHdt'
-});
-
-var gpsListenerSat2 = new ROSLIB.Topic({
-    ros : ros2,
-    name : '/satellite2/sbg/gps_pos',
-    messageType : 'sbg_driver/SbgGpsPos'
 });
 
 var compassListenerSat3 = new ROSLIB.Topic({
@@ -173,26 +233,45 @@ var gpsListenerSat3 = new ROSLIB.Topic({
 
 var compassListenerSat4 = new ROSLIB.Topic({
     ros : ros4,
-    name : '/satellite4/sbg/gps_hdt',
-    messageType : 'sbg_driver/SbgGpsHdt'
+    name : '/anafi/imu',
+    messageType : 'sensor_msgs/Imu'
 });
 var gpsListenerSat4 = new ROSLIB.Topic({
     ros : ros4,
-    name : '/satellite4/sbg/gps_pos',
-    messageType : 'sbg_driver/SbgGpsPos'
+    name : '/anafi/gps',
+    messageType : 'geographic_msgs/GeoPoseStamped'
 });
 
-compassListenerSat1.subscribe(function(message){
-    let qw = message.pose.pose.orientation.w;
-    let qx = message.pose.pose.orientation.x;
-    let qy = message.pose.pose.orientation.y;
-    let qz = message.pose.pose.orientation.z;
+var i0 = 0;
+gpsListenerUser.subscribe(function(message) {
+    userPos.lat = message.latitude;
+    userPos.lng = message.longitude;
+    if (mapSetted) {
+        if(i0 == 0)
+        {
+            userMarker.addTo(map).bindPopup("Vous êtes ici");
+            if (selectedSatellite == 0) {
+                map.panTo([userPos.lat, userPos.lng]);
+            }
+        }
+        if(i0 % cycleNumber == 0)
+        {
+            userMarker.setLatLng([userPos.lat, userPos.lng]);
+        }
+        i0++;
+    }
+});
+
+compassListenerSat1.subscribe(function(message) {
+    let qw = message.orientation.w;
+    let qx = message.orientation.x;
+    let qy = message.orientation.y;
+    let qz = message.orientation.z;
     satellite1Pos.hea = 90.0-180.0*Math.atan2(2.0*(qw*qz+qx+qy), 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite1Marker.setRotationAngle(satellite1Pos.hea/2.0);
     if (selectedSatellite = 1) {
-        compass.value = satellite1Pos.hea;
+        refreshCompass(satellite1Pos.hea);
     }
-    refreshCompass(satellite1Pos.hea);
 })
 var i1 = 0;
 gpsListenerSat1.subscribe(function(message) {
@@ -202,7 +281,7 @@ gpsListenerSat1.subscribe(function(message) {
         if(i1 == 0)
         {
             satellite1Marker.addTo(map).bindPopup("Satellite 1");
-            if (selectedSatellite == 1 || selectedSatellite == 0) {
+            if (selectedSatellite == 1) {
                 map.panTo([satellite1Pos.lat, satellite1Pos.lng]);
             }
         }
@@ -214,34 +293,7 @@ gpsListenerSat1.subscribe(function(message) {
     }
 });
 
-compassListenerSat2.subscribe(function(message){
-    satellite2Pos.hea = message.true_heading;
-    satellite2Marker.setRotationAngle(satellite2Pos.hea / 2);
-    if (selectedSatellite = 2) {
-        compass.value = satellite2Pos.hea;
-    }
-})
-var i2 = 0;
-gpsListenerSat2.subscribe(function(message) {
-    satellite2Pos.lat = message.latitude;
-    satellite2Pos.lng = message.longitude;
-    if (mapSetted) {
-        if(i2 == 0)
-        {
-            satellite2Marker.addTo(map).bindPopup("Satellite 2");
-            if (selectedSatellite == 2 || selectedSatellite == 0) {
-                map.panTo([satellite2Pos.lat, satellite2Pos.lng]);
-            }
-        }
-        if(i2 % cycleNumber == 0)
-        {
-            satellite2Marker.setLatLng([satellite2Pos.lat, satellite2Pos.lng]);
-        }
-        i2++;
-    }
-});
-
-compassListenerSat3.subscribe(function(message){
+compassListenerSat3.subscribe(function(message) {
     let qw = message.orientation.w;
     let qx = message.orientation.x;
     let qy = message.orientation.y;
@@ -249,7 +301,7 @@ compassListenerSat3.subscribe(function(message){
     satellite3Pos.hea = 180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite3Marker.setRotationAngle(satellite3Pos.hea/2.0);
     if (selectedSatellite = 3) {
-        compass.value = satellite3Pos.hea;
+        refreshCompass(satellite3Pos.hea);
     }
 })
 
@@ -261,7 +313,7 @@ gpsListenerSat3.subscribe(function(message) {
         if(i3 == 0)
         {
             satellite3Marker.addTo(map).bindPopup("Satellite 3");
-            if (selectedSatellite == 3 || selectedSatellite == 0) {
+            if (selectedSatellite == 3) {
                 map.panTo([satellite3Pos.lat, satellite3Pos.lng]);
             }
         }
@@ -273,11 +325,11 @@ gpsListenerSat3.subscribe(function(message) {
     }
 });
 
-compassListenerSat4.subscribe(function(message){
+compassListenerSat4.subscribe(function(message) {
     satellite4Pos.hea = message.true_heading;
     satellite4Marker.setRotationAngle(satellite4Pos.hea / 2);
     if (selectedSatellite = 4) {
-        compass.value = satellite4Pos.hea;
+        refreshCompass(satellite4Pos.hea);
     }
 })
 var i4 = 0;
@@ -288,7 +340,7 @@ gpsListenerSat4.subscribe(function(message) {
         if(i4 == 0)
         {
             satellite4Marker.addTo(map).bindPopup("Satellite 4");
-            if (selectedSatellite == 4 || selectedSatellite == 0) {
+            if (selectedSatellite == 4) {
                 map.panTo([satellite4Pos.lat, satellite4Pos.lng]);
             }
         }

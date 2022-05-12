@@ -9,6 +9,9 @@ const path = require('path');
 const routes = require('./routes/index');
 const bodyParser = require('body-parser');
 
+const Fili = require('fili');
+const Swal = require('sweetalert2')
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(bodyParser.urlencoded({extended: true}));

@@ -7,11 +7,17 @@ var waypointList = [];
 var addingWaypoint = false;
 var currID = 0;
 var currCoverageAreaPointID = 0;
+var currStrategicPointID = 0;
 var cameraDisplay = false;
 var missionLaunched = false;
 var eStopOn = false;
 var addingCoverageArea = false;
 var coverageAreaList = [];
+var addingStrategicPoint = false;
+var strategicPointList = [];
+var detectedStrategicPointList = [];
+var strategicPointType = 'hybrid';
+var strategicPointState = 1;
 var state = new String;
 
 var telemetryListenerList = [];
@@ -159,7 +165,27 @@ huskyStatusListener.subscribe(function(message) {
 });
 telemetryListenerList.push(huskyStatusListener);
 
-// Define Services
+var missionContextListener = new ROSLIB.Topic({
+    ros : ros3,
+    name : 'mission/mission_context',
+    messageType : 'navigation_msgs/MissionContext'
+});
+
+missionContextListener.subscribe(function(message) {
+    detectedStrategicPointList = [];
+    message.strategic_points.forEach(w => {
+        detectedStrategicPointList.push({
+            "latitude": w.latitude,
+            "longitude": w.longitude,
+            "id": 'A'+currStrategicPointID
+        });
+        currStrategicPointID++;
+    });
+    updateDetectedStrategicPointList(detectedStrategicPointList);
+});
+telemetryListenerList.push(missionContextListener);
+
+// Services
 
 var waypointPub = new ROSLIB.Topic({
     ros : ros3,
@@ -202,40 +228,40 @@ var submitCoverageArea = new ROSLIB.Service({
 $('#navigationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
     $('#'+mode+'ModeCollapse').collapse('hide');
-    unsubscribeTelemetryListener();
     mode = 'navigation';
-    sendMode(mode);
     $('#'+mode+'ModeLabel').addClass('active');
     $('#'+mode+'ModeCollapse').collapse('show');
+    unsubscribeTelemetryListener();
+    sendMode(mode);
 })
 
 $('#explorationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
     $('#'+mode+'ModeCollapse').collapse('hide');
-    unsubscribeTelemetryListener();
     mode = 'exploration';
-    sendMode(mode);
     $('#'+mode+'ModeLabel').addClass('active');
     $('#'+mode+'ModeCollapse').collapse('show');
+    unsubscribeTelemetryListener();
+    sendMode(mode);
 })
 
 $('#tasksModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
     $('#'+mode+'ModeCollapse').collapse('hide');
-    unsubscribeTelemetryListener();
     mode = 'tasks';
-    sendMode(mode);
     $('#'+mode+'ModeLabel').addClass('active');
     $('#'+mode+'ModeCollapse').collapse('show');
+    unsubscribeTelemetryListener();
+    sendMode(mode);
 })
 
 $('#telemetryModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
     $('#'+mode+'ModeCollapse').collapse('hide');
     mode = 'telemetry';
-    sendMode(mode);
     $('#'+mode+'ModeLabel').addClass('active');
     $('#'+mode+'ModeCollapse').collapse('show');
+    sendMode(mode);
 })
 
 // Navigation
@@ -244,12 +270,16 @@ $("#addingWaypointBtn").click(function (event) {
     $('#addingWaypointCollapse').collapse('hide');
     $('#addingWaypointCancelCollapse').collapse('show');
     addingWaypoint = true;
+    $('.swapWaypointBtn.invisible').removeClass('invisible');
+    $('.removeWaypointBtn.invisible').removeClass('invisible');
 });
 
 $('#addWaypointCancel').click(function (event) {
-    addingWaypoint = false;
     $('#addingWaypointCancelCollapse').collapse('hide');
     $('#addingWaypointCollapse').collapse('show');
+    addingWaypoint = false;
+    $('.swapWaypointBtn').addClass('invisible');
+    $('.removeWaypointBtn').addClass('invisible');
 });
 
 $('#clearWaypointList').click(function (event) {
@@ -280,8 +310,6 @@ var swapArrayElements = function (arr, indexA, indexB) {
 
 var sortable = Sortable.create(el, {
     onEnd: function (evt) {
-        var itemEl = evt.item;  // dragged HTMLElement
-        console.log(itemEl.id, evt.oldIndex, evt.newIndex);
         swapArrayElements(waypointList, evt.oldIndex, evt.newIndex);
         updateWaypointList(waypointList);
         updatePath();
@@ -293,9 +321,6 @@ var sortable = Sortable.create(el, {
 /// Send mission
 
 $("#submitWaypointList").click(function (event) {
-    let hmiWaypoints = [];
-    let id = 0;
-
     let currentTime = new Date();
     let cohomaWaypoints = [];
     let secs = Math.floor(currentTime.getTime()/1000);
@@ -304,15 +329,11 @@ $("#submitWaypointList").click(function (event) {
     let input_altitude = document.getElementById("altitudeInput").value;
 
     waypointList.forEach(w => {
-        hmiWaypoints.push({
-            "latlong": w.latlong,
-            "id": "id" + id
-        });
-        id++;
+
         let wayPoint = new ROSLIB.Message({
             position : {
-                latitude : w.latlong[0],
-                longitude : w.latlong[1],
+                latitude : w.latitude,
+                longitude : w.longitude,
                 altitude : input_altitude
             },
             trap_clearance : false,
@@ -336,10 +357,9 @@ $("#submitWaypointList").click(function (event) {
     };
 
     pushMissionClient.callService(request, function(result) {
-        console.log("1");
         console.log(result.success);
         if (result.success){
-            sendWaypoint(hmiWaypoints);
+            sendWaypoint(waypointList);
             $('#launchMissionBtn').removeClass('disabled');
             $('#abortMissionBtn').addClass('disabled');
             $('#submitMissionCollapse').collapse('hide');
@@ -349,12 +369,10 @@ $("#submitWaypointList").click(function (event) {
 });
 
 $("#launchMissionBtn").click(function (event) {
-    console.log("3");
     console.log(missionLaunched);
     if (!missionLaunched){
         let request = new ROSLIB.ServiceRequest();
         launchMissionClient.callService(request, function(result) {
-            console.log("2");
             console.log(result.success);
             if (result.success){
                 missionLaunched = true;
@@ -424,14 +442,13 @@ var posShow = function (position) {
 var updatePath = function () {
     var latlongs = [];
     waypointList.forEach(element => {
-        latlongs.push(element.latlong);
+        latlongs.push([element.latitude, element.longitude]);
     });
     polyline.setLatLngs(latlongs);
     decorator.setPaths(polyline);
 }
 
 var updateWaypointList = function (waypoints) {
-    // wps must contain an id and a latlong array at the bare minimum
     waypointList.forEach(element => {
         if (element.marker) {
             element.marker.removeFrom(map);
@@ -447,7 +464,7 @@ var updateWaypointList = function (waypoints) {
 
         waypoints.forEach(w => {
             if (!w.marker) {
-                var marker = new L.marker(w.latlong, {
+                var marker = new L.marker([w.latitude, w.longitude], {
                     icon: blackDotIcon,
                     draggable: 'true'
                 });
@@ -456,17 +473,17 @@ var updateWaypointList = function (waypoints) {
                     marker.setLatLng(position, {
                         draggable: 'true'
                     }).update();
-                    w.latlong = [position.lat, position.lng];
+                    w.latitude = position.lat;
+                    w.longitude = position.lng;
 
                     document.getElementById(w.id+'-text').childNodes[0].nodeValue = posShow(position);
-                    updateWaypointList(waypointList);
                     updatePath();
                 });
                 w.marker = marker;
 
-                marker.on('click', function (event) {
-                    $('.waypointItem.active').removeClass("active");
-                    $('#' + w.id).addClass("active");
+                w.marker.on('click', function (event) {
+                    $('.listItem.active').removeClass("active");
+                    $('#'+w.id).addClass("active");
                 });
             }
             w.marker.addTo(map);
@@ -478,8 +495,12 @@ var updateWaypointList = function (waypoints) {
     $("#waypointListGroup").empty();
     waypointList.forEach(element => {
         var position = element.marker.getLatLng();
-        $("#waypointListGroup").append('<li class="list-group-item waypointItem" id="'+element.id+'">\n<div class="d-flex">\n<p class="text flex-grow-1 my-0 align-text-center" id="'+element.id+'-text">'+posShow(position)+'</p>\n<button class="btn handle mr-2 align-content-center swapWaypointBtn" type="button"><img src="../css/images/grabber.svg"></img></button>\n<button class="btn removeWaypointBtn" type="button"><img src="../css/images/x.svg"></img></button></div></li>');
+        $("#waypointListGroup").append('<li class="list-group-item listItem p-2" id="'+element.id+'">\n<div class="d-flex">\n<img class="align-self-center" src="../css/images/black_dot.svg" height="22"></img>\n<p class="text flex-grow-1 my-0 text-center align-self-center" id="'+element.id+'-text">'+posShow(position)+'</p>\n<button class="btn handle mr-2 align-content-center swapWaypointBtn invisible" type="button"><img src="../css/images/grabber.svg"></img></button>\n<button class="btn removeWaypointBtn invisible" type="button"><img src="../css/images/x.svg"></img></button></div></li>');
     });
+    if (addingWaypoint){
+        $(".swapWaypointBtn.invisible").removeClass("invisible");
+        $(".removeWaypointBtn.invisible").removeClass("invisible");
+    }
 
     $(".removeWaypointBtn").click(removeWaypoint);
 
@@ -491,8 +512,6 @@ var updateWaypointList = function (waypoints) {
 /// Exploration
 
 $("#submitCoverageArea").click(function (event) {
-    let hmiCoverageArea = [];
-    let id = 0;
 
     let currentTime = new Date();
     let cohomaCoverageArea = [];
@@ -500,18 +519,14 @@ $("#submitCoverageArea").click(function (event) {
     let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
 
     coverageAreaList.forEach(p => {
-        hmiCoverageArea.push({
-            "latlong": p.latlong,
-            "id": "id-" + id
-        });
-        id++;
         cohomaCoverageArea.push(new ROSLIB.Message({
-            latitude : p.latlong[0],
-            longitude : p.latlong[1],
-            altitude : 0.0
+                latitude : p.latitude,
+                longitude : p.longitude,
+                altitude : 0.0
             })
         );
     });
+    
     let request = new ROSLIB.ServiceRequest({
         area : cohomaCoverageArea,
     });
@@ -519,16 +534,15 @@ $("#submitCoverageArea").click(function (event) {
     submitCoverageArea.callService(request, function(result) {
         if (result.success){
             coverageAreaList = [];
-            currID = 0;
             result.waypoints.forEach(w => {
                 coverageAreaList.push({
-                    "latlong": [w.latitude, x.longitude],
-                    "id": "id-" + currID
+                    "latitude": w.latitude,
+                    "longitude": w.longitude,
+                    "id": w.id
                 });
-                currID++;
+            });
             updateWaypointList(coverageAreaList);
             updatePath();
-            });
         };
     });
 });
@@ -537,12 +551,14 @@ $("#addingCoverageAreaBtn").click(function (event) {
     $('#addingCoverageAreaCollapse').collapse('hide');
     $('#addingCoverageAreaCancelCollapse').collapse('show');
     addingCoverageArea = true;
+    $('.removeCoverageAreaBtn').removeClass('invisible');
 });
 
 $('#addCoverageAreaCancel').click(function (event) {
-    addingCoverageArea = false;
     $('#addingCoverageAreaCancelCollapse').collapse('hide');
     $('#addingCoverageAreaCollapse').collapse('show');
+    addingCoverageArea = false;
+    $('.removeCoverageAreaBtn').addClass('invisible');
 });
 
 $('#clearCoverageAreaList').click(function (event) {
@@ -560,12 +576,17 @@ $('#clearCoverageAreaList').click(function (event) {
 var updatePolygon = function () {
     var latlongs = [];
     coverageAreaList.forEach(element => {
-        latlongs.push(element.latlong);
+        latlongs.push([element.latitude, element.longitude]);
     });
     polygon.setLatLngs(latlongs);
 }
 
 var updateCoverageAreaList = function (coverageAreaPoints) {
+    coverageAreaPoints.forEach(element => {
+        if (element.marker) {
+            element.marker.removeFrom(map);
+        }
+    });
     coverageAreaList = [];
     if (coverageAreaPoints.length == 0) {
         $("#clearCoverageAreaList").addClass("disabled");
@@ -576,7 +597,7 @@ var updateCoverageAreaList = function (coverageAreaPoints) {
 
         coverageAreaPoints.forEach(p => {
             if (!p.marker) {
-                var marker = new L.marker(p.latlong, {
+                var marker = new L.marker([p.latitude, p.longitude], {
                     icon: blueDotIcon,
                     draggable: 'true'
                 });
@@ -585,17 +606,17 @@ var updateCoverageAreaList = function (coverageAreaPoints) {
                     marker.setLatLng(position, {
                         draggable: 'true'
                     }).update();
-                    p.latlong = [position.lat, position.lng];
+                    p.latitude = position.lat;
+                    p.longitude = position.lng;
 
                     document.getElementById(p.id+'-text').childNodes[0].nodeValue = posShow(position);
-                    updateCoverageAreaList(coverageAreaList);
                     updatePolygon();
                 });
                 p.marker = marker;
 
-                marker.on('click', function (event) {
-                    $('.coverageAreaItem.active').removeClass("active");
-                    $('#' + p.id).addClass("active");
+                p.marker.on('click', function (event) {
+                    $('.listItem.active').removeClass("active");
+                    $('#'+p.id).addClass("active");
                 });
             }
             p.marker.addTo(map);
@@ -607,8 +628,10 @@ var updateCoverageAreaList = function (coverageAreaPoints) {
     $("#coverageAreaListGroup").empty();
     coverageAreaList.forEach(element => {
         var position = element.marker.getLatLng();
-        $("#coverageAreaListGroup").append('<li class="list-group-item coverageAreaItem" id="'+element.id+'">\n<div class="d-flex">\n<p class="text flex-grow-1 my-0 align-text-center" id="'+element.id+'-text">'+posShow(position)+'</p>\n<button class="btn removeCoverageAreaBtn" type="button"><img src="../css/images/x.svg"></img></button></div></li>');
-    });
+        $("#coverageAreaListGroup").append('<li class="list-group-item listItem p-2" id="'+element.id+'">\n<div class="d-flex">\n<img class="align-self-center" src="../css/images/blue_dot.svg" height="22"></img>\n<p class="text flex-grow-1 my-0 align-self-center text-center" id="'+element.id+'-text">'+posShow(position)+'</p>\n<button class="btn invisible removeCoverageAreaBtn" type="button"><img src="../css/images/x.svg"></img></button></div></li>');    });
+    if (addingCoverageArea){
+        $(".removeCoverageAreaBtn.invisible").removeClass("invisible");
+    }
 
     $(".removeCoverageAreaBtn").click(removeCoverageArea);
 }
@@ -634,44 +657,247 @@ var removeCoverageArea = function (event) {
     }
 };
 
-// Map
+/// Tasks
+
+$("#submitStrategicPointList").click(function (event) {
+
+    let currentTime = new Date();
+    let cohomaStrategicPoint = [];
+    let secs = Math.floor(currentTime.getTime()/1000);
+    let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
+
+    strategicPointList.forEach(p => {
+        cohomaStrategicPoint.push(new ROSLIB.Message({
+            latitude : p.latitude,
+            longitude : p.longitude,
+            altitude : 0.0
+            })
+        );
+    });
+    
+    let request = new ROSLIB.ServiceRequest({
+        area : cohomaStrategicPoint,
+    });
+
+    submitStrategicPoint.callService(request, function(result) {
+        if (result.success){
+            strategicPointList = [];
+            currStrategicPointID = 0;
+            result.waypoints.forEach(w => {
+                strategicPointList.push(w);
+                currStrategicPointID++;
+            });
+            updateWaypointList(strategicPointList);
+        };
+    });
+});
+
+$("#addingStrategicPointBtn").click(function (event) {
+    $('#addingStrategicPointCollapse').collapse('hide');
+    $('#addingStrategicPointCancelCollapse').collapse('show');
+    addingStrategicPoint = true;
+    $('.removeStrategicPointBtn').removeClass('invisible');
+});
+
+$('#addStrategicPointCancel').click(function (event) {
+    $('#addingStrategicPointCancelCollapse').collapse('hide');
+    $('#addingStrategicPointCollapse').collapse('show');
+    addingStrategicPoint = false;
+    $('.removeStrategicPointBtn').addClass('invisible');
+});
+
+$('#clearStrategicPointList').click(function (event) {
+    if (!$('#clearStrategicPointList').hasClass('disabled')){
+        strategicPointList.forEach(element => {
+            element.marker.removeFrom(map);
+        });
+        currStrategicPointPointID = 0;
+        strategicPointList = [];
+        updateStrategicPointList(strategicPointList);
+    }
+});
+
+var updateStrategicPointList = function (strategicPoints) {
+    strategicPoints.forEach(element => {
+        if (element.marker) {
+            element.marker.removeFrom(map);
+            element.circle.removeFrom(map);
+        }
+    });
+    strategicPointList = [];
+    if (strategicPoints.length == 0) {
+        $("#clearStrategicPointList").addClass("disabled");
+        $("#submitStrategicPointList").addClass("disabled");
+    } else {
+        $("#clearStrategicPoint").removeClass("disabled");
+        $("#submitStrategicPointList").removeClass("disabled");
+
+        let color = {0: "green", 1: "orange", 2: "red"};
+        var trapIcon = L.icon({
+            iconUrl: "../css/images/"+strategicPointType+"_trap_"+color[strategicPointState]+".svg",
+            iconSize:     [30, 30],
+            iconAnchor:   [15, 15],
+            popupAnchor:  [0, 0]
+        });
+        
+        strategicPoints.forEach(p => {
+            if (!p.marker) {
+                var circle = new L.circle([p.latitude, p.longitude], {
+                    color: color[p.state],
+                    radius: p.radius
+                });
+                var marker = new L.marker([p.latitude, p.longitude], {
+                    icon: trapIcon,
+                    draggable: 'true'
+                });
+                marker.on('dragend', function (event) {
+                    var position = marker.getLatLng();
+                    marker.setLatLng(position, {
+                        draggable: 'true'
+                    }).update();
+                    circle.setLatLng(position);
+                    p.latitude = position.lat;
+                    p.longitude = position.lng;
+                });
+                p.circle = circle;
+                p.marker = marker;
+
+                p.marker.on('click', function (event) {
+                    $('.listItem.active').removeClass("active");
+                    $('#'+p.id).addClass("active");
+                });
+            }
+            p.marker.addTo(map);
+            p.circle.addTo(map);
+            strategicPointList.push(p);
+        });
+    }
+    currStrategicPointID = strategicPoints.length + 1;
+
+    $("#strategicPointListGroup").empty();
+    strategicPointList.forEach(element => {
+        let bootstrapColor = {0: 'success', 1: 'warning', 2: 'danger'};
+        let color = {0: "green", 1: "orange", 2: "red"};
+        let strategicPointText = {'aerial': 'Menace aérienne', 'hybrid': 'Menace hybride', 'ground': 'Menace terrestre'};
+        $("#strategicPointListGroup").append('<li class="list-group-item list-group-item-'+bootstrapColor[element.state]+' listItem p-2" id="'+element.id+'">\n<div class="d-flex">\n<img class="align-self-center" src="../css/images/'+element.type+'_trap_'+color[element.state]+'.svg" height="22"></img>\n<p class="text flex-grow-1 my-0 align-self-center text-center" id="'+element.id+'-text">'+strategicPointText[element.type]+'</p>\n<button class="btn invisible removeStrategicPointBtn" type="button"><img src="../css/images/x.svg"></img></button></div></li>');
+    });
+    if (addingStrategicPoint){
+        $(".removeStrategicPointBtn.invisible").removeClass("invisible");
+    }
+
+    $(".removeStrategicPointBtn").click(removeStrategicPoint);
+}
+
+var removeStrategicPoint = function (event) {
+    var id = $(this).closest("li").attr("id");
+    var i = 0;
+    var k = 0;
+    strategicPointList.forEach(element => {
+        if (id == element.id) {
+            element.marker.removeFrom(map);
+            element.circle.removeFrom(map);
+            k = i;
+        }
+        i++;
+    });
+    strategicPointList.splice(k, 1);
+    $(this).closest("li").remove();
+    updateStrategicPointList(strategicPointList);
+    if (strategicPointList.length == 0){
+        $("#clearStrategicPointList").addClass("disabled");
+        $("#submitStrategicPointList").addClass("disabled");
+    }
+};
+
+// Strategic Point Type Selector
+
+$('#hybridTypeBtn:input').change(function () {
+    $('#'+strategicPointType+'TypeLabel').removeClass('active');
+    strategicPointType = 'hybrid';
+    $('#'+strategicPointType+'TypeLabel').addClass('active');
+})
+
+$('#aerialTypeBtn:input').change(function () {
+    $('#'+strategicPointType+'TypeLabel').removeClass('active');
+    strategicPointType = 'aerial';
+    $('#'+strategicPointType+'TypeLabel').addClass('active');
+})
+
+$('#groundTypeBtn:input').change(function () {
+    $('#'+strategicPointType+'TypeLabel').removeClass('active');
+    strategicPointType = 'ground';
+    $('#'+strategicPointType+'TypeLabel').addClass('active');
+})
+
+// Strategic Point State Selector
+
+$('#defusedStateBtn:input').change(function () {
+    $('#defusedStateLabel').removeClass('active');
+    $('#activeStateLabel').removeClass('active');
+    $('#unalterableStateLabel').removeClass('active');
+    strategicPointState = 0;
+    $('#defusedStateLabel').addClass('active');
+})
+
+$('#activeStateBtn:input').change(function () {
+    $('#defusedStateLabel').removeClass('active');
+    $('#activeStateLabel').removeClass('active');
+    $('#unalterableStateLabel').removeClass('active');
+    strategicPointState = 1;
+    $('#activeStateLabel').addClass('active');
+})
+
+$('#unalterableStateBtn:input').change(function () {
+    $('#defusedStateLabel').removeClass('active');
+    $('#activeStateLabel').removeClass('active');
+    $('#unalterableStateLabel').removeClass('active');
+    strategicPointState = 2;
+    $('#unalterableStateLabel').addClass('active');
+})
+
+/// Map
 
 map.on('click', function (e) {
     if (addingWaypoint && mode == 'navigation') {
-        var id = "id-" + currID;
-        var latlong = e.latlng;
 
         waypointList.push({
-            "latlong": [latlong.lat, latlong.lng],
-            "id": id
+            "id": 'W'+currID,
+            "latitude": e.latlng.lat,
+            "longitude": e.latlng.lng
         });
+        currID++;
 
         updateWaypointList(waypointList);
         updatePath();
-
-        currID++;
-        $(".removeWaypointBtn").click(function (event) {
-            $(this).closest("li").remove();
-        });
-    }
+    };
     if (addingCoverageArea && mode == 'exploration') {
-        var id = "id-CA-" + currCoverageAreaPointID;
-        var latlong = e.latlng;
 
         coverageAreaList.push({
-            "latlong": [latlong.lat, latlong.lng],
-            "id": id
+            "id": 'A'+currCoverageAreaPointID,
+            "latitude": e.latlng.lat,
+            "longitude": e.latlng.lng
         });
+        currCoverageAreaPointID++;
 
         updateCoverageAreaList(coverageAreaList);
         updatePolygon();
+    };
+    if (addingStrategicPoint && mode == 'tasks') {
 
-        currCoverageAreaPointID++;
-        $(".removeCoverageAreaBtn").click(function (event) {
-            $(this).closest("li").remove();
+        strategicPointList.push({
+            "id": 'S'+currStrategicPointID,
+            "latitude": e.latlng.lat,
+            "longitude": e.latlng.lng,
+            "type": strategicPointType,
+            "state": strategicPointState,
+            "radius": radiusInput.value
         });
-    }
-    $('.coverageAreaItem.active').removeClass("active");
+        currStrategicPointID++;
+
+        updateStrategicPointList(strategicPointList);
+    };
+
+    $('.listItem.active').removeClass("active");
 });
 
 /// Other functions
@@ -685,8 +911,8 @@ var publishWaypoint = function(waypoints) {
     waypoints.forEach(w => {
         let wayPoint = new ROSLIB.Message({
             position : {
-                latitude : w.latlong[0],
-                longitude : w.latlong[1],
+                latitude : w.latitude,
+                longitude : w.longitude,
                 altitude : input_altitude
             },
             trap_clearance : false,
@@ -727,3 +953,9 @@ var decorator = L.polylineDecorator(polyline, {
 }).addTo(map);
 
 var polygon = L.polygon([]).addTo(map);
+
+var circle = []
+L.circle([51.508, -0.11], {
+    color: 'red',
+    radius: 500
+}).addTo(map);

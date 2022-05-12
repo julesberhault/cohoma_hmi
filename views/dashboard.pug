@@ -7,13 +7,14 @@ html
             link(rel='stylesheet', href='/css/bootstrap.min.css')
             link(rel='stylesheet', href='/css/styles.css')
             link(rel='stylesheet', href='/css/leaflet.css')
-            link(rel='stylesheet', href='/css/sweetalert.css')
+            link(rel='stylesheet', href='/css/sweetalert2.min.css')
             script(src='/js/libs/jquery-3.4.1.min.js')
             script(src='/js/libs/bootstrap.min.js')
             script(src='/js/libs/bootstrap.bundle.min.js')
             script(src='/socket.io/socket.io.js')
             script(src='/js/libs/roslib.min.js')
-            script(src='/js/libs/sweetalert.min.js')
+            script(src='/js/libs/fili.min.js')
+            script(src='/js/libs/sweetalert2.min.js')
             script(src='/js/libs/leaflet.js')
             script(src='/js/libs/leaflet.movingRotatedMarker.js')
             script(src='/js/libs/leaflet.polylineDecorator.js')
@@ -25,11 +26,11 @@ html
     body
         | <header class="navbar navbar-expand justify-content-center fixed-top bg-light">
         |   <ul class="nav nav-pills nav-fill">
-        |       <li class="nav-item"><a href="/general" id="navGeneral" class="nav-link mr-2" aria-current="page">General</a></li>
-        |       <li class="nav-item"><a href="/satellite1" id="navSatellite1" class="nav-link mr-2">Satellite I</a></li>
-        |       <li class="nav-item"><a href="/satellite2" id="navSatellite2" class="nav-link mr-2 disabled">Satellite II</a></li>
-        |       <li class="nav-item"><a href="/satellite3" id="navSatellite3" class="nav-link mr-2">Satellite III</a></li>
-        |       <li class="nav-item"><a href="/satellite4" id="navSatellite4" class="nav-link disabled">Satellite VI</a></li>
+        |       <li class="nav-item"><a href="/general" id="navGeneral" class="nav-link mr-2 disabled" aria-current="page">General</a></li>
+        |       <li class="nav-item"><a href="/satellite1" id="navSatellite1" class="nav-link mx-2">Satellite I</a></li>
+        |       <li class="nav-item"><a href="/satellite2" id="navSatellite2" class="nav-link mx-2 disabled">Satellite II</a></li>
+        |       <li class="nav-item"><a href="/satellite3" id="navSatellite3" class="nav-link mx-2">Satellite III</a></li>
+        |       <li class="nav-item"><a href="/satellite4" id="navSatellite4" class="nav-link ml-2">Satellite VI</a></li>
         |   </ul>
         | </header>
         div.container-fluid.overflow-hidden.bg-white.pt-5

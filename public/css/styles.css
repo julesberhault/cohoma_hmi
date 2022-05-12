@@ -102,25 +102,16 @@ html, body, #map {
   padding-left: 0px;
 }
 
+.removeStrategicPointBtn {
+  float: right;
+
+  padding-top: 0px;
+  padding-right: 0px;
+  padding-bottom: 0px;
+  padding-left: 0px;
+}
+
 .swapWaypointBtn {
-  padding-top: 0px;
-  padding-right: 0px;
-  padding-bottom: 0px;
-  padding-left: 0px;
-}
-
-#addingWaypointBtn {
-  float: right;
-
-  padding-top: 0px;
-  padding-right: 0px;
-  padding-bottom: 0px;
-  padding-left: 0px;
-}
-
-#addingCoverageAreaBtn {
-  float: right;
-
   padding-top: 0px;
   padding-right: 0px;
   padding-bottom: 0px;

@@ -52,90 +52,38 @@ var compass = new RadialGauge({
     animationDuration: 20
 }).draw();
 
-var altitude = new RadialGauge({
-    renderTo: 'altitude',
-    width: 150,
-    height: 140,
-    minValue: 0,
-    maxValue: 10,
-    title:"Altitude",
-    colorTitle: "#eee",
-    units: "m",
-    colorUnits: "#eee",
-    colorMajorTicks: "#ddd",
-    colorMinorTicks: "#ccc",
-    colorNumbers: "#eee",
-    ticksAngle: 360,
-    startAngle: 180,
-    majorTicks: [
-        "0",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "0",
-    ],
-    minorTicks: 4,
-    strokeTicks: false,
-    highlights: false,
-    colorPlate: "#333",
-    colorPlateEnd: "#222",
-    borderShadowWidth: 0,
-    borders: true,
-    needleType: "arrow",
-    needleWidth: 2,
-    valueBox: true,
-    valueInt: 2,
-    valueDec: 1,
-    colorNeedleCircleOuter: "#222",
-    needleCircleSize: 12,
-    needleCircleOuter: true,
-    needleCircleInner: false,
-    borders: true,
-    borderInnerWidth: 2,
-    borderMiddleWidth: 3,
-    borderOuterWidth: 2,
-    colorBorderInner: "#222",
-    colorBorderMiddle: "#333",
-    colorBorderOuter: "#222",
-    useMinPath: true,
-    animation: false
-}).draw();
-
 var velocity = new RadialGauge({
     renderTo: 'velocity',
     width: 150,
     height: 140,
     minValue: 0,
-    maxValue: 60,
+    maxValue: 14,
     title:"Vitesse",
     colorTitle: "#666",
     units: "km/h",
     colorUnits: "#666",
     colorMajorTicks: "#666",
     colorMinorTicks: "#777",
+    minValue: 0,
+    maxValue: 14,
     ticksAngle: 270,
     startAngle: 45,
     majorTicks: [
         "0",
+        "2",
+        "4",
+        "6",
+        "8",
         "10",
-        "20",
-        "30",
-        "40",
-        "50",
-        "60",
+        "12",
+        "14"
     ],
     minorTicks: 4,
     strokeTicks: true,
     highlights: [
         {
-            "from": 40,
-            "to": 60,
+            "from": 11,
+            "to": 14,
             "color": "#bbb"
         }
     ],
@@ -161,7 +109,7 @@ var velocity = new RadialGauge({
 
 var refreshCompass = function(heading)
 {
-    // Heading angle in degrees taking value from -180° to 180°
+    // Heading angle in degrees going from -180° to 180°
     if (heading < 0.0) { compass.value = 360.0+heading; }
     else { compass.value = heading; }
 }

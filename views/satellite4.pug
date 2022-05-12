@@ -1,10 +1,155 @@
 extends dashboard
 block content
-    div.row.justify-content-center
-        div.btn-group.btn-group.btn-block.mx-3.mt-3(role='group' aria-label='Basic radio toggle button group')
-            label.btn.btn-outline-primary(for='btnradio1') #[#input.btnradio1.btn-check-checked(type='radio' name='btnradio' autocomplete='off' display=none)] Navigation
-            label.btn.btn-outline-primary(for='btnradio2') #[#input.btnradio2.btn-check(type='radio' name='btnradio' autocomplete='off')] Exploration
-            label.btn.btn-outline-primary(for='btnradio3') #[#input.btnradio3.btn-check(type='radio' name='btnradio' autocomplete='off')] Tâche
+    .row.border-top.pt-2.pb-1.px-1
+        .col.px-2
+            div.btn-group.d-flex(role='group' aria-label='modeSelector')
+                label.btn.btn-outline-primary.my-0(for='navigationModeBtn' id='navigationModeLabel') #[input.btn-check(type='radio' name='mode' id='navigationModeBtn' autocomplete='off')] Navigation
+                label.btn.btn-outline-primary.my-0(for='explorationModeBtn' id='explorationModeLabel') #[input.btn-check(type='radio' name='mode' id='explorationModeBtn' autocomplete='off')] Exploration
+                label.btn.btn-outline-primary.my-0(for='tasksModeBtn' id='tasksModeLabel') #[input.btn-check(type='radio' name='mode' id='tasksModeBtn' autocomplete='off')] Tâches
+    .row.border-bottom.shadow.pb-1.px-1
+        .col.px-2
+            .collapse#navigationModeCollapse
+                .py-1
+                    .d-grid
+                        button(type='button').btn.btn-outline-secondary#refreshMission Rafraichir mission
+                    .pt-1
+                    li.list-group#waypointListGroup
+                    .pt-1
+                    .collapse#addingWaypointCancelCollapse
+                        .card.text-center
+                            .card-text Cliquer sur la carte pour ajouter
+                                .row.px-2.pb-1
+                                    .col-6.pr-1
+                                        .d-grid
+                                            button(type='button').btn.btn-danger.disabled#clearWaypointList Effacer tout
+                                    .col-6.pl-1
+                                        .d-grid
+                                            button(type='button').btn.btn-primary#addWaypointCancel Terminer
+                    .collapse.show#addingWaypointCollapse
+                        lu.list-group
+                            li.list-group-item.d-flex.justify-content-between.align-items-center#addingWaypointBtn Modifier l'itinéraire
+                                img(src='../css/images/plus.svg')
+                        .pt-1
+                        .card.card-body.pb-1
+                            form.d-grid(onsubmit='return false;')
+                                div.input-group.pb-1
+                                    span.input-group-text Altitude de vol
+                                    input.form-control(type="text" name="altitudeInput" id="altitudeInput" oninput="this.form.altitudeRange.value=this.value")
+                                    span.input-group-text m
+                                input.form-range(type="range" name="altitudeRange" min="0" max="32" step="2" id="altitudeRange" oninput="this.form.altitudeInput.value=this.value;")
+                        .collapse.show#submitMissionCollapse
+                            .pt-1
+                                .d-grid
+                                    button(type='button').btn.btn-secondary.disabled#submitWaypointList Envoyer mission
+                        .collapse#launchMissionCollapse
+                            .pt-1
+                                .d-grid
+                                    button(type='button').btn.btn-success#launchMissionBtn Lancer mission
+                        .pt-1
+                            .d-grid
+                                button(type='button').btn.btn-danger#abortMissionBtn Arrêter mission
+            .collapse#explorationModeCollapse
+                .py-1
+                    .card.card-body
+                        |   Renseignez un polygone convexe à explorer pour générer une trajectoire en boustrophédon permettant de couvrir cette zone.
+                    li.list-group.pt-1#coverageAreaListGroup
+                    .collapse#addingCoverageAreaCancelCollapse
+                        .pt-1
+                        .card.text-center
+                            .card-title
+                                .card-text Cliquer sur la carte pour ajouter
+                                    .row.px-2.pt-1
+                                        .col.pr-1
+                                            .d-grid
+                                                button(type='button').btn.btn-danger.disabled#clearCoverageAreaList Effacer zone
+                                        .col.pl-1
+                                            .d-grid
+                                                button(type='button').btn.btn-primary#addCoverageAreaCancel Terminer
+                    .collapse.show#addingCoverageAreaCollapse
+                        .pt-1
+                            lu.list-group
+                                li.list-group-item.d-flex.justify-content-between.align-items-center#addingCoverageAreaBtn Modifier la zone d'exploration
+                                    img(src='../css/images/plus.svg')
+                    .pt-1
+                        .d-grid
+                            button(type='button').btn.btn-secondary.disabled#submitCoverageArea Générer trajectoire
+            .collapse#tasksModeCollapse
+                .py-1
+                    .card.card-body
+                        | Renseignez manuellement les pièges detectés.
+                    li.list-group.pt-1#detectedStrategicPointListGroup
+                    li.list-group.pt-1#strategicPointListGroup
+                    .collapse#addingStrategicPointCancelCollapse
+                        .pt-1
+                        .card.text-center
+                            .card-title
+                                .card-text Cliquer sur la carte pour ajouter
+                                    .row.px-2.pt-1
+                                        .col.pl-1
+                                            form.d-grid(onsubmit='return false;')
+                                                div.input-group.pb-1
+                                                    span.input-group-text Rayon d'action
+                                                    input.form-control(type="text" name="radiusInput" id="radiusInput" oninput="this.form.radiusRange.value=this.value")
+                                                    span.input-group-text m
+                                                input.form-range.pb-1(type="range" name="radiusRange" min="0" max="50" step="5" id="radiusRange" oninput="this.form.radiusInput.value=this.value")
+                                            .d-grid
+                                                div.btn-group.d-flex.pb-1(role='group' aria-label='strategicPointTypeSelector')
+                                                    label.btn.btn-outline-secondary(for='aerialTypeBtn' id='aerialTypeLabel') #[input.btn-check(type='radio' name='mode' id='aerialTypeBtn' autocomplete='off')] Aérienne
+                                                    label.btn.btn-outline-secondary.active(for='hybridTypeBtn' id='hybridTypeLabel') #[input.btn-check(type='radio' name='mode' id='hybridTypeBtn' autocomplete='off')] Hybride
+                                                    label.btn.btn-outline-secondary(for='groundTypeBtn' id='groundTypeLabel') #[input.btn-check(type='radio' name='mode' id='groundTypeBtn' autocomplete='off')] Terrestre
+                                            .d-grid
+                                                div.btn-group.d-flex.pb-1(role='group' aria-label='strategicPointStateSelector')
+                                                    label.btn.btn-outline-secondary(for='defusedStateBtn' id='defusedStateLabel') #[input.btn-check(type='radio' name='mode' id='defusedStateBtn' autocomplete='off')] Désactivé
+                                                    label.btn.btn-outline-secondary.active(for='activeStateBtn' id='activeStateLabel') #[input.btn-check(type='radio' name='mode' id='activeStateBtn' autocomplete='off')] Actif
+                                                    label.btn.btn-outline-secondary(for='unalterableStateBtn' id='unalterableStateLabel') #[input.btn-check(type='radio' name='mode' id='unalterableStateBtn' autocomplete='off')] Inaltérable
+                                            .d-grid
+                                                button(type='button').btn.btn-primary#addStrategicPointCancel Terminer
+                    .collapse.show#addingStrategicPointCollapse
+                        .pt-1
+                            lu.list-group
+                                li.list-group-item.d-flex.justify-content-between.align-items-center#addingStrategicPointBtn Modifier la liste de points stratégiques
+                                    img(src='../css/images/plus.svg')
+                    .pt-1
+                        .d-grid
+                            button(type='button').btn.btn-secondary.disabled#submitStrategicPointList Confirmer position(s)
+    .row.pt-2.pb-1.px-1
+        .col.px-2
+            label.btn.btn-outline-primary.d-grid.my-0(for='telemetryModeBtn' id='telemetryModeLabel') #[input.btn-check(type='radio' name='mode' id='telemetryModeBtn' autocomplete='off')] Télémétrie
+    .row.border-bottom.shadow.pb-1
+        .col.px-2
+            .collapse#telemetryModeCollapse
+                .pt-1
+                    .progress(style='height: 40px;')
+                        .progress-bar.bg-success.progress-bar-striped.progress-bar-animated(role='progressbar' style='width: 0%;' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100')#battery Batterie
+                .pt-1
+                    label.btn.btn-outline-secondary.d-grid(for='displayCameraBtn' id='displayCameraLabel') #[input(type='checkbox' id='displayCameraBtn' autocomplete='off')] Caméra embarquée
+                .collapse#displayCameraCollapse
+                    .pt-1
+                        img.img-fluid.rounded(id='videoStreamImg' src='../css/images/placeholder.png')
+                .pt-1
+                    .row.remove-height
+                        .col-6.d-flex.align-items-center.justify-content-center
+                            canvas#compass
+                        .col-6.d-flex.align-items-center.justify-content-center
+                            canvas#velocity
+                .pt-1
+                    .row.remove-height
+                        .col-6.d-flex.align-items-center.justify-content-center
+                            canvas#altitude
+                        .col-6.d-flex.align-items-center.justify-content-center
+                            .h3 #[.badge.text-wrap.bg-dark.text-white#droneState]
+                .pt-1
+                script(src='/js/telemetry_uav.js')
+    .row.border-bottom.shadow.py-2.px-1
+        .col.px-2
+            .collapse.show#takeOffCollapse
+                .d-grid
+                    button(type='button').btn.btn-secondary#takeOffBtn Décollage
+            .collapse#landCollapse
+                .d-grid
+                    button(type='button').btn.btn-secondary#landBtn Attérissage
+            .pt-1
+                .d-grid
+                    button(type='button').btn.btn-outline-danger#emergencyStop Arrêt d'urgence
 
-    script(src='/js/libs/gauge.min.js')
     script(src='/js/satellite4.js')
