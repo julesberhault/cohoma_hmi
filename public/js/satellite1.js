@@ -262,7 +262,7 @@ $("#submitWaypointList").click(function (event) {
             position : {
                 latitude : w.latitude,
                 longitude : w.longitude,
-                altitude : input_altitude
+                altitude : 0.0
             },
             trap_clearance : false,
             reached : false
