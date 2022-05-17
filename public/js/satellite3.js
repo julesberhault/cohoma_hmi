@@ -20,6 +20,7 @@ var strategicPointType = 'hybrid';
 var strategicPointState = 1;
 var state = new String;
 
+
 var telemetryListenerList = [];
 
 /// Socket.io | Recover mission
@@ -53,16 +54,17 @@ velocityListener.subscribe(function(message) {
     let velocity_kmh = 3.6 * (message.x + message.y);
     velocity.value = Math.abs(velocity_kmh.toFixed(2));
 });
+
 telemetryListenerList.push(velocityListener);
 
 var altitudeListener = new ROSLIB.Topic({
     ros : ros3,
-    name : '/anafi/gps',
-    messageType : 'geographic_msgs/GeoPoseStamped'
+    name : '/anafi/gnd_dist',
+    messageType : 'std_msgs/Float32'
 });
 
 altitudeListener.subscribe(function(message) {
-    let altitude_m = message.pose.position.altitude;
+    let altitude_m = message.data;
     altitude.value = Math.abs(altitude_m.toFixed(2));
 });
 telemetryListenerList.push(altitudeListener);
@@ -77,27 +79,29 @@ var droneStateList = {"LANDED" : "Au sol", "TAKINGOFF" : "Décollage", "LANDING"
 stateListener.subscribe(function(message) {
     droneState = message.data;
     document.getElementById("droneState").innerHTML = droneStateList[droneState];
-    if (droneState in ["HOVERING", "FLYING"]) {
-        $("#landBtn").removeChild($("#landLoading"));
-        $('#takeOffCollapse').collapse('hide');
-        $('#landCollapse').collapse('show');
-        $("#landBtn").removeClass("disabled")
-    }
-    if (droneState in ["LANDED"]) {
-        $("#takeOffBtn").removeChild($("#takeOffLoading"));
-        $('#takeOffCollapse').collapse('show');
-        $('#landCollapse').collapse('hide');
-        $("#takeOffBtn").removeClass("disabled")
-    }
-    if (droneState in ["EMERGENCY_LANDING", "LANDING"]) {
-        $("#landBtn").appendChild(document.createElement('<span class="spinner-grow spinner-grow-sm" id="landLoading" role="status" aria-hidden="true"></span>'));
-        $("#landBtn").addClass("disabled")
-    }
-    if (droneState in ["MOTOR_RAMPING"]) {
-        $("#takeOffBtn").appendChild(document.createElement('<span class="spinner-grow spinner-grow-sm" id="takeOffLoading" role="status" aria-hidden="true"></span>'));
-        $("#takeOffBtn").addClass("disabled")
+
+    switch (droneState) {
+        case "HOVERING":
+            $('#takeOffCollapse').collapse('hide');
+            $('#landCollapse').collapse('show');
+            $("#landBtn").removeClass("disabled")
+            break;
+        case "LANDED":
+            $('#takeOffCollapse').collapse('show');
+            $('#landCollapse').collapse('hide');
+            $("#takeOffBtn").removeClass("disabled")
+            break;
+        case "LANDING":
+            $("#landBtn").addClass("disabled")
+            break;
+        case "MOTOR_RAMPING":
+            $("#takeOffBtn").addClass("disabled")
+            break;
+        default:
+            break;
     }
 });
+
 telemetryListenerList.push(stateListener);
 
 var videoStreamListener = new ROSLIB.Topic({
@@ -127,43 +131,16 @@ $('#displayCameraBtn:input').change(function () {
     }
 })
 
-var eStopPublisher = new ROSLIB.Topic({
-    ros : ros3,
-    name : '/e_stop',
-    messageType : 'std_msgs/Bool'
-});
-
-$("#emergencyStop").click(function (event) {
-    if (eStopOn)
-    {
-        let eStopMsg = new ROSLIB.Message({
-            data : false
-        });
-        eStopPublisher.publish(eStopMsg);
-        eStopOn = false;
-        $('#emergencyStop').removeClass('active');
-    }
-    else
-    {
-        let eStopMsg = new ROSLIB.Message({
-            data : true
-        });
-        eStopPublisher.publish(eStopMsg);
-        eStopOn = true;
-        $('#emergencyStop').addClass('active');
-    }
-});
-
-var huskyStatusListener = new ROSLIB.Topic({
+var batteryListener = new ROSLIB.Topic({
     ros: ros3,
-    name: '/status',
-    messageType: 'husky_msgs/HuskyStatus'
+    name: '/anafi/battery',
+    messageType: 'std_msgs/Int8'
 });
 
-huskyStatusListener.subscribe(function(message) {
-    $('#battery').css('width', message.charge_estimate*100+'%').attr('aria-valuenow', message.charge_estimate*100);
+batteryListener.subscribe(function(message) {
+    $('#battery').css('width', message.data+'%').attr('aria-valuenow', message.data);
 });
-telemetryListenerList.push(huskyStatusListener);
+telemetryListenerList.push(batteryListener);
 
 var missionContextListener = new ROSLIB.Topic({
     ros : ros3,
@@ -173,11 +150,16 @@ var missionContextListener = new ROSLIB.Topic({
 
 missionContextListener.subscribe(function(message) {
     detectedStrategicPointList = [];
-    message.strategic_points.forEach(w => {
+    console.log("Hello");
+    message.strategic_points.forEach(p => {
         detectedStrategicPointList.push({
-            "latitude": w.latitude,
-            "longitude": w.longitude,
-            "id": 'A'+currStrategicPointID
+            "id": p.id,
+            "latitude": p.position.latitude,
+            "longitude": p.position.longitude,
+            "type": p.type,
+            "state": p.status,
+            "radius": p.radius,
+            "message": p.message
         });
         currStrategicPointID++;
     });
@@ -190,13 +172,13 @@ telemetryListenerList.push(missionContextListener);
 var waypointPub = new ROSLIB.Topic({
     ros : ros3,
     name : '/mission/mission_plan',
-    messageType : 'anafi_control/MissionPlan'
+    messageType : 'anafi_base/MissionPlan'
 });
 
 var pushMissionClient = new ROSLIB.Service({
     ros : ros3,
     name : 'mission/push_mission',
-    serviceType : 'anafi_control/PushMission'
+    serviceType : 'anafi_base/PushMission'
 });
 
 var launchMissionClient = new ROSLIB.Service({
@@ -211,16 +193,34 @@ var abortMissionClient = new ROSLIB.Service({
     serviceType : 'std_srvs/Empty'
 });
 
-var takeOffLandClient = new ROSLIB.Service({
+var takeOffClient = new ROSLIB.Service({
     ros : ros3,
-    name : '/take_off_land',
-    serviceType : 'anafi_base/TakeOffLand'
+    name : '/take_off',
+    serviceType : 'std_srvs/Trigger'
+});
+
+var landClient = new ROSLIB.Service({
+    ros : ros3,
+    name : '/land',
+    serviceType : 'std_srvs/Trigger'
 });
 
 var submitCoverageArea = new ROSLIB.Service({
     ros : ros3,
-    name : '/mission/coverage_area',
-    serviceType : 'anafi_control/CoverageArea'
+    name : '/mission/generate_bous',
+    serviceType : 'anafi_base/CoverageArea'
+});
+
+var emergencyStopClient = new ROSLIB.Service({
+    ros : ros3,
+    name : '/cancel_moveTo',
+    serviceType : 'std_srvs/Trigger'
+});
+
+var returnHomeClient = new ROSLIB.Service({
+    ros : ros3,
+    name : '/return_home',
+    serviceType : 'std_srvs/Trigger'
 });
 
 /// Mode selection Navigation | Exploration | Tasks
@@ -334,7 +334,7 @@ $("#submitWaypointList").click(function (event) {
             position : {
                 latitude : w.latitude,
                 longitude : w.longitude,
-                altitude : input_altitude
+                altitude : parseFloat(input_altitude)
             },
             trap_clearance : false,
             reached : false
@@ -357,7 +357,6 @@ $("#submitWaypointList").click(function (event) {
     };
 
     pushMissionClient.callService(request, function(result) {
-        console.log(result.success);
         if (result.success){
             sendWaypoint(waypointList);
             $('#launchMissionBtn').removeClass('disabled');
@@ -369,11 +368,10 @@ $("#submitWaypointList").click(function (event) {
 });
 
 $("#launchMissionBtn").click(function (event) {
-    console.log(missionLaunched);
     if (!missionLaunched){
+        console.log("Mission Launched")
         let request = new ROSLIB.ServiceRequest();
         launchMissionClient.callService(request, function(result) {
-            console.log(result.success);
             if (result.success){
                 missionLaunched = true;
                 $('#launchMissionBtn').addClass('disabled');
@@ -394,25 +392,46 @@ $("#abortMissionBtn").click(function (event) {
     };
 });
 
+$("#emergencyStop").click(function (event) {
+    let request = new ROSLIB.ServiceRequest();
+        abortMissionClient.callService(request, function(result) {
+            missionLaunched = false;
+            $('#launchMissionBtn').removeClass('disabled');
+            $('#abortMissionBtn').addClass('disabled');
+        });
+
+    request = new ROSLIB.ServiceRequest();
+        emergencyStopClient.callService(request, function(result) {
+        });
+});
+
 $("#takeOffBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
     if(droneState == "LANDED"){
         let request = new ROSLIB.ServiceRequest({
-            str : "take_off"
         });
-        takeOffLandClient.callService(request, function(result) {});
+        takeOffClient.callService(request, function(result) {});
     };
 });
+
 
 $("#landBtn").click(function (event) {
 //Inspirer de launch mission pour envoyer srv
     if(droneState != "LANDED"){
         let request = new ROSLIB.ServiceRequest({
-            str : "land"
         });
-        takeOffLandClient.callService(request, function(result) {});
+        landClient.callService(request, function(result) {});
     };
 });
+
+$("#returnHome").click(function (event) {
+    //Inspirer de launch mission pour envoyer srv
+        if(droneState == "HOVERING"){
+            let request = new ROSLIB.ServiceRequest();
+            returnHomeClient.callService(request, function(result) {
+            });
+        };
+    });
 
 var removeWaypoint = function (event) {
     var id = $(this).closest("li").attr("id");
@@ -517,6 +536,7 @@ $("#submitCoverageArea").click(function (event) {
     let cohomaCoverageArea = [];
     let secs = Math.floor(currentTime.getTime()/1000);
     let nsecs = Math.round(1000000000*(currentTime.getTime()/1000-secs));
+    let input_altitude = document.getElementById("altitudeInput").value;
 
     coverageAreaList.forEach(p => {
         cohomaCoverageArea.push(new ROSLIB.Message({
@@ -726,14 +746,12 @@ var updateStrategicPointList = function (strategicPoints) {
     });
     strategicPointList = [];
     if (strategicPoints.length == 0) {
-        $("#clearStrategicPointList").addClass("disabled");
         $("#submitStrategicPointList").addClass("disabled");
     } else {
-        $("#clearStrategicPoint").removeClass("disabled");
         $("#submitStrategicPointList").removeClass("disabled");
 
         let color = {0: "green", 1: "orange", 2: "red"};
-        var trapIcon = L.icon({
+        let trapIcon = L.icon({
             iconUrl: "../css/images/"+strategicPointType+"_trap_"+color[strategicPointState]+".svg",
             iconSize:     [30, 30],
             iconAnchor:   [15, 15],
@@ -786,6 +804,57 @@ var updateStrategicPointList = function (strategicPoints) {
     }
 
     $(".removeStrategicPointBtn").click(removeStrategicPoint);
+}
+
+var updateDetectedStrategicPointList = function (strategicPoints) {
+    strategicPoints.forEach(element => {
+        if (element.marker) {
+            element.marker.removeFrom(map);
+            element.circle.removeFrom(map);
+        }
+    });
+    strategicPointList = [];
+
+    let color = {0: "green", 1: "orange", 2: "red"};
+    let type = {0: "unknown", 1: "hybrid", 2: "ground", 3: "aerial"};
+    
+    strategicPoints.forEach(p => {
+        let trapIcon = L.icon({
+            iconUrl: "../css/images/"+type[p.type]+"_trap_"+color[p.state]+".svg",
+            iconSize:     [30, 30],
+            iconAnchor:   [15, 15],
+            popupAnchor:  [0, 0]
+        });
+        if (!p.marker) {
+            var circle = new L.circle([p.latitude, p.longitude], {
+                color: color[p.state],
+                radius: p.radius
+            });
+            var marker = new L.marker([p.latitude, p.longitude], {
+                icon: trapIcon,
+            });
+            p.circle = circle;
+            p.marker = marker;
+
+            p.marker.on('click', function (event) {
+                $('.listItem.active').removeClass("active");
+                $('#'+p.id).addClass("active");
+            });
+        }
+        p.marker.addTo(map).bindPopup(p.message);
+        p.circle.addTo(map);
+        strategicPointList.push(p);
+    });
+    currStrategicPointID = strategicPoints.length + 1;
+
+    $("#strategicPointListGroup").empty();
+    strategicPointList.forEach(element => {
+        let bootstrapColor = {0: 'success', 1: 'warning', 2: 'danger'};
+        let color = {0: "green", 1: "orange", 2: "red"};
+        let type = {0: "unknown", 1: "hybrid", 2: "ground", 3: "aerial"};
+        let strategicPointText = {3: 'Menace aérienne', 1: 'Menace hybride', 2: 'Menace terrestre'};
+        $("#strategicPointListGroup").append('<li class="list-group-item list-group-item-'+bootstrapColor[element.state]+' listItem p-2" id="'+element.id+'">\n<div class="d-flex">\n<img class="align-self-center" src="../css/images/'+type[element.type]+'_trap_'+color[element.state]+'.svg" height="22"></img>\n<p class="text flex-grow-1 my-0 align-self-center text-center" id="'+element.id+'-text">'+strategicPointText[element.type]+'</p>\n<button class="btn invisible removeStrategicPointBtn" type="button"><img src="../css/images/x.svg"></img></button></div></li>');
+    });
 }
 
 var removeStrategicPoint = function (event) {
@@ -913,7 +982,7 @@ var publishWaypoint = function(waypoints) {
             position : {
                 latitude : w.latitude,
                 longitude : w.longitude,
-                altitude : input_altitude
+                altitude : parseFloat(input_altitude)
             },
             trap_clearance : false,
             reached : false
@@ -953,9 +1022,3 @@ var decorator = L.polylineDecorator(polyline, {
 }).addTo(map);
 
 var polygon = L.polygon([]).addTo(map);
-
-var circle = []
-L.circle([51.508, -0.11], {
-    color: 'red',
-    radius: 500
-}).addTo(map);

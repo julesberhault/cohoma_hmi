@@ -859,9 +859,3 @@ var decorator = L.polylineDecorator(polyline, {
 }).addTo(map);
 
 var polygon = L.polygon([]).addTo(map);
-
-var circle = []
-L.circle([51.508, -0.11], {
-    color: 'red',
-    radius: 500
-}).addTo(map);

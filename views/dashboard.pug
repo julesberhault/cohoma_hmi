@@ -24,15 +24,28 @@ html
             | <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     body
-        | <header class="navbar navbar-expand justify-content-center fixed-top bg-light">
-        |   <ul class="nav nav-pills nav-fill">
-        |       <li class="nav-item"><a href="/general" id="navGeneral" class="nav-link mr-2 disabled" aria-current="page">General</a></li>
-        |       <li class="nav-item"><a href="/satellite1" id="navSatellite1" class="nav-link mx-2">Satellite I</a></li>
-        |       <li class="nav-item"><a href="/satellite2" id="navSatellite2" class="nav-link mx-2 disabled">Satellite II</a></li>
-        |       <li class="nav-item"><a href="/satellite3" id="navSatellite3" class="nav-link mx-2">Satellite III</a></li>
-        |       <li class="nav-item"><a href="/satellite4" id="navSatellite4" class="nav-link ml-2">Satellite VI</a></li>
-        |   </ul>
-        | </header>
+        header.navbar.navbar-expand.justify-content-center.fixed-top.bg-light
+            ul.nav.nav-pills.nav-fill
+                li.nav-item
+                    a.nav-link.position-relative.disabled(href="/general" id="navGeneral" aria-current="page") General
+                        span.position-absolute.top-0.start-100.translate-middle.p-2.bg-success.border.border-light.rounded-circle.visually-hidden
+                .mx-2
+                li.nav-item
+                    a.nav-link.position-relative(href="/satellite1" id="navSatellite1") Satellite I
+                        span.position-absolute.top-0.start-100.translate-middle.p-2.bg-success.border.border-light.rounded-circle.visually-hidden#satellite1Connection
+                .mx-2
+                li.nav-item
+                    a.nav-link.position-relative.disabled(href="/satellite2" id="navSatellite2") Satellite II
+                        span.position-absolute.top-0.start-100.translate-middle.p-2.bg-success.border.border-light.rounded-circle.visually-hidden#satellite2Connection
+                .mx-2
+                li.nav-item
+                    a.nav-link.position-relative(href="/satellite3" id="navSatellite3") Satellite III
+                        span.position-absolute.top-0.start-100.translate-middle.p-2.bg-success.border.border-light.rounded-circle.visually-hidden#satellite3Connection
+                .mx-2
+                li.nav-item
+                    a.nav-link.position-relative(href="/satellite4" id="navSatellite4") Satellite VI
+                        span.position-absolute.top-0.start-100.translate-middle.p-2.bg-success.border.border-light.rounded-circle.visually-hidden#satellite4Connection
+        header
         div.container-fluid.overflow-hidden.bg-white.pt-5
             div.row.flex-xl-nowrap.pt-2
                 div.col-12.col-md-9.bd-content.px-0.order-last

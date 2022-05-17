@@ -12,11 +12,6 @@ var satellite4Pos = {lat: 0., lng: 0., hea: 0.};
 
 // Leaflet.js
 
-var defaultLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-	maxZoom: 20,
-	attribution: '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-});
-
 var satelliteLayer = L.tileLayer('https://wxs.ign.fr/{apikey}/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE={style}&TILEMATRIXSET=PM&FORMAT={format}&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
 	attribution: '<a href="https://www.geoportail.gouv.fr/">Geoportail France</a>',
 	bounds: [[-75, -180], [81, 180]],
@@ -27,8 +22,13 @@ var satelliteLayer = L.tileLayer('https://wxs.ign.fr/{apikey}/geoportail/wmts?RE
 	style: 'normal'
 });
 
+var planLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+	maxZoom: 20,
+	attribution: '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+});
+
 var map = L.map('mapdiv', {
-    layers: [defaultLayer]
+    layers: [satelliteLayer]
 });
 
 // ----- Get Last Location -----
@@ -42,8 +42,8 @@ socket.on("currentCenteredLocation", function(currentCenteredLocation) {
 // -----------------------------
 
 baseLayers = {
-    "Default": defaultLayer,
     "Satellite": satelliteLayer,
+    "Plan": planLayer,
 }
 overlays = {
 }
@@ -136,66 +136,42 @@ var ros3 = new ROSLIB.Ros({url : 'ws://11.0.0.13:9090'})
 var ros4 = new ROSLIB.Ros({url : 'ws://11.0.0.14:9090'})
 
 ros1.on('connection', function() {
-    if (selectedSatellite == 1) {
-        Swal.fire({
-            position: 'top-end',
-            icon: 'success',
-            title: 'Connected to Satellite 1 established',
-            showConfirmButton: false,
-            timer: 1500
-        })
-    }
+    $('#satellite1Connection').removeClass('visually-hidden')
 });
 
 ros1.on('error', function(error) {
     if (selectedSatellite == 1) {
         Swal.fire({
             icon: 'error',
-            title: 'Satellite 1 lost',
+            title: 'No connection',
             text: 'Unable to communicate with ROS master',
         })
     }
 });
 
 ros3.on('connection', function() {
-    if (selectedSatellite == 3) {
-        Swal.fire({
-            position: 'top-end',
-            icon: 'success',
-            title: 'Connected to Satellite 1 established',
-            showConfirmButton: false,
-            timer: 1500
-        })
-    }
+    $('#satellite3Connection').removeClass('visually-hidden')
 });
 
 ros3.on('error', function(error) {
     if (selectedSatellite == 3) {
         Swal.fire({
             icon: 'error',
-            title: 'Satellite 1 lost',
+            title: 'No connection',
             text: 'Unable to communicate with ROS master',
         })
     }
 });
 
 ros4.on('connection', function() {
-    if (selectedSatellite == 4) {
-        Swal.fire({
-            position: 'top-end',
-            icon: 'success',
-            title: 'Connected to Satellite 1 established',
-            showConfirmButton: false,
-            timer: 1500
-        })
-    }
+    $('#satellite4Connection').removeClass('visually-hidden')
 });
 
 ros4.on('error', function(error) {
     if (selectedSatellite == 4) {
         Swal.fire({
             icon: 'error',
-            title: 'Satellite 1 lost',
+            title: 'No connection',
             text: 'Unable to communicate with ROS master',
         })
     }
@@ -203,7 +179,7 @@ ros4.on('error', function(error) {
 
 var gpsListenerUser = new ROSLIB.Topic({
     ros : ros1,
-    name : '/user/navsat/fix',
+    name : '/control_station/fix',
     messageType : 'sensor_msgs/NavSatFix'
 });
 
@@ -269,7 +245,8 @@ compassListenerSat1.subscribe(function(message) {
     let qz = message.orientation.z;
     satellite1Pos.hea = 90.0-180.0*Math.atan2(2.0*(qw*qz+qx+qy), 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite1Marker.setRotationAngle(satellite1Pos.hea/2.0);
-    if (selectedSatellite = 1) {
+    if (selectedSatellite == 1) {
+        console.log(satellite1Pos.hea);
         refreshCompass(satellite1Pos.hea);
     }
 })
@@ -300,7 +277,7 @@ compassListenerSat3.subscribe(function(message) {
     let qz = message.orientation.z;
     satellite3Pos.hea = 180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite3Marker.setRotationAngle(satellite3Pos.hea/2.0);
-    if (selectedSatellite = 3) {
+    if (selectedSatellite == 3) {
         refreshCompass(satellite3Pos.hea);
     }
 })
@@ -328,14 +305,14 @@ gpsListenerSat3.subscribe(function(message) {
 compassListenerSat4.subscribe(function(message) {
     satellite4Pos.hea = message.true_heading;
     satellite4Marker.setRotationAngle(satellite4Pos.hea / 2);
-    if (selectedSatellite = 4) {
+    if (selectedSatellite == 4) {
         refreshCompass(satellite4Pos.hea);
     }
 })
 var i4 = 0;
 gpsListenerSat4.subscribe(function(message) {
-    satellite4Pos.lat = message.latitude;
-    satellite4Pos.lng = message.longitude;
+    satellite4Pos.lat = message.pose.position.latitude;
+    satellite4Pos.lng = message.pose.position.longitude;
     if (mapSetted) {
         if(i4 == 0)
         {
