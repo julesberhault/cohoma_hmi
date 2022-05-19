@@ -1,8 +1,8 @@
 // Drawing Gauges
 var compass = new RadialGauge({
     renderTo: 'compass',
-    width: 150,
-    height: 140,
+    width: 200,
+    height: 200,
     minValue: 0,
     maxValue: 360,
     animationTarget: "plate",
@@ -54,8 +54,8 @@ var compass = new RadialGauge({
 
 var velocity = new RadialGauge({
     renderTo: 'velocity',
-    width: 150,
-    height: 140,
+    width: 200,
+    height: 200,
     minValue: 0,
     maxValue: 14,
     title:"Vitesse",

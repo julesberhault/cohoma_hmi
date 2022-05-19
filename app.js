@@ -24,9 +24,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-var waypointList = [];
 var mode = 'navigation';
-var centeredLocation = {lat: 48.711252, lng: 2.217757};
 
 io.on('connection', function (socket) {
     console.log("Someone is connected !")
@@ -38,23 +36,6 @@ io.on('connection', function (socket) {
 
     socket.on('getMode', function () {
         socket.emit('currentMode', mode);
-    });
-  
-    socket.on('setWaypointList', function (newWaypointList) {
-        console.log(newWaypointList);
-        waypointList = newWaypointList;
-    });
-  
-    socket.on('getWaypointList', function () {
-        socket.emit('currentWaypointList', waypointList);
-    });
-
-    socket.on('setCenteredLocation', function (newCenteredLocation) {
-        centeredLocation = newCenteredLocation;
-    });
-  
-    socket.on('getCenteredLocation', function () {
-        socket.emit('currentCenteredLocation', centeredLocation);
     });
 });
 

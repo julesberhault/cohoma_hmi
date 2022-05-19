@@ -15,7 +15,6 @@ var addingCoverageArea = false;
 var coverageAreaList = [];
 var addingStrategicPoint = false;
 var strategicPointList = [];
-var detectedStrategicPointList = [];
 var strategicPointType = 'hybrid';
 var strategicPointState = 1;
 var butterworthFilterCoeffs = new Fili.FirCoeffs().lowpass({
@@ -36,7 +35,7 @@ socket.on("currentMode", function(currentMode) {
     mode = currentMode;
     $('#'+mode+'ModeBtn:input').prop("checked", true);
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
 });
 
 socket.emit("getWaypointList");
@@ -63,7 +62,7 @@ telemetryListenerList.push(velocityListener);
 
 var videoStreamListener = new ROSLIB.Topic({
     ros: ros1,
-    name: '/zed_node/left/image_rect_gray/compressed',
+    name: '/zed_node/rgb/image_rect_color/compressed',
     messageType: 'sensor_msgs/CompressedImage'
 });
 
@@ -71,7 +70,7 @@ $('#displayCameraBtn:input').change(function () {
     if (cameraDisplay)
     {
         $('#displayCameraLabel').removeClass('active');
-        $('#displayCameraCollapse').collapse('hide');
+        $('#displayCameraCollapse').removeClass("show");
         videoStreamListener.unsubscribe();
         telemetryListenerList.pop(telemetryListenerList.indexOf(videoStreamListener));
         cameraDisplay = false;
@@ -79,7 +78,7 @@ $('#displayCameraBtn:input').change(function () {
     else
     {
         $('#displayCameraLabel').addClass('active');
-        $('#displayCameraCollapse').collapse('show');
+        $('#displayCameraCollapse').addClass("show");
         videoStreamListener.subscribe(function(message) {
             document.getElementById('videoStreamImg').src = "data:image/jpg;base64," + message.data;
         });
@@ -156,56 +155,56 @@ var abortMissionClient = new ROSLIB.Service({
 
 $('#navigationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'navigation';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     unsubscribeTelemetryListener();
     sendMode(mode);
 })
 
 $('#explorationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'exploration';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     unsubscribeTelemetryListener();
     sendMode(mode);
 })
 
 $('#tasksModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'tasks';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     unsubscribeTelemetryListener();
     sendMode(mode);
 })
 
 $('#telemetryModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'telemetry';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     sendMode(mode);
 })
 
 // Navigation
 
 $("#addingWaypointBtn").click(function (event) {
-    $('#addingWaypointCollapse').collapse('hide');
-    $('#addingWaypointCancelCollapse').collapse('show');
+    $('#addingWaypointCollapse').removeClass("show");
+    $('#addingWaypointCancelCollapse').addClass("show");
     addingWaypoint = true;
     $('.swapWaypointBtn.invisible').removeClass('invisible');
     $('.removeWaypointBtn.invisible').removeClass('invisible');
 });
 
 $('#addWaypointCancel').click(function (event) {
-    $('#addingWaypointCancelCollapse').collapse('hide');
-    $('#addingWaypointCollapse').collapse('show');
+    $('#addingWaypointCancelCollapse').removeClass("show");
+    $('#addingWaypointCollapse').addClass("show");
     addingWaypoint = false;
     $('.swapWaypointBtn').addClass('invisible');
     $('.removeWaypointBtn').addClass('invisible');
@@ -286,11 +285,11 @@ $("#submitWaypointList").click(function (event) {
 
     submitMissionClient.callService(request, function(result) {
         if (result.success){
-            sendWaypoint(waypointList);
+            missionLaunched = false;
             $('#launchMissionBtn').removeClass('disabled');
             $('#abortMissionBtn').addClass('disabled');
-            $('#submitMissionCollapse').collapse('hide');
-            $('#launchMissionCollapse').collapse('show');
+            $('#submitMissionCollapse').removeClass("show");
+            $('#launchMissionCollapse').addClass("show");
         };
     });
 });
@@ -409,8 +408,8 @@ var updateWaypointList = function (waypoints) {
 
     $(".removeWaypointBtn").click(removeWaypoint);
 
-    $('#submitMissionCollapse').collapse('show');
-    $('#launchMissionCollapse').collapse('hide');
+    $('#submitMissionCollapse').addClass("show");
+    $('#launchMissionCollapse').removeClass("show");
     $('#launchMissionBtn').addClass('disabled');
 }
 
@@ -453,15 +452,15 @@ $("#submitCoverageArea").click(function (event) {
 });
 
 $("#addingCoverageAreaBtn").click(function (event) {
-    $('#addingCoverageAreaCollapse').collapse('hide');
-    $('#addingCoverageAreaCancelCollapse').collapse('show');
+    $('#addingCoverageAreaCollapse').removeClass("show");
+    $('#addingCoverageAreaCancelCollapse').addClass("show");
     addingCoverageArea = true;
     $('.removeCoverageAreaBtn').removeClass('invisible');
 });
 
 $('#addCoverageAreaCancel').click(function (event) {
-    $('#addingCoverageAreaCancelCollapse').collapse('hide');
-    $('#addingCoverageAreaCollapse').collapse('show');
+    $('#addingCoverageAreaCancelCollapse').removeClass("show");
+    $('#addingCoverageAreaCollapse').addClass("show");
     addingCoverageArea = false;
     $('.removeCoverageAreaBtn').addClass('invisible');
 });
@@ -599,15 +598,15 @@ $("#submitStrategicPointList").click(function (event) {
 });
 
 $("#addingStrategicPointBtn").click(function (event) {
-    $('#addingStrategicPointCollapse').collapse('hide');
-    $('#addingStrategicPointCancelCollapse').collapse('show');
+    $('#addingStrategicPointCollapse').removeClass("show");
+    $('#addingStrategicPointCancelCollapse').addClass("show");
     addingStrategicPoint = true;
     $('.removeStrategicPointBtn').removeClass('invisible');
 });
 
 $('#addStrategicPointCancel').click(function (event) {
-    $('#addingStrategicPointCancelCollapse').collapse('hide');
-    $('#addingStrategicPointCollapse').collapse('show');
+    $('#addingStrategicPointCancelCollapse').removeClass("show");
+    $('#addingStrategicPointCollapse').addClass("show");
     addingStrategicPoint = false;
     $('.removeStrategicPointBtn').addClass('invisible');
 });

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    res.render('dashboard', {});
+    res.render('satellite1', {});
 });
 
 router.get('/dashboard', (req, res) => {

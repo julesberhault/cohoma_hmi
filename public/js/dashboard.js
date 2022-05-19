@@ -1,6 +1,7 @@
-mapSetted = false;
+var mapSetted = false;
+var centeredLocation = {lat: 48.711252, lng: 2.217757};
 var selectedSatellite = 0; // 0 is for general
-var cycleNumber = 5;
+var cycleNumber = 10;
 var centeredLocation;
 var zoomLevel = 18;
 
@@ -9,6 +10,10 @@ var satellite1Pos = {lat: 0., lng: 0., hea: 0.};
 var satellite2Pos = {lat: 0., lng: 0., hea: 0.};
 var satellite3Pos = {lat: 0., lng: 0., hea: 0.};
 var satellite4Pos = {lat: 0., lng: 0., hea: 0.};
+
+var detectedStrategicPointListSat1 = [];
+var detectedStrategicPointListSat3 = [];
+var detectedStrategicPointListSat4 = [];
 
 // Leaflet.js
 
@@ -31,16 +36,6 @@ var map = L.map('mapdiv', {
     layers: [satelliteLayer]
 });
 
-// ----- Get Last Location -----
-socket.emit("getCenteredLocation");
-
-socket.on("currentCenteredLocation", function(currentCenteredLocation) {
-    centeredLocation = currentCenteredLocation;
-    map.setView(centeredLocation, zoomLevel);
-    mapSetted = true;
-});
-// -----------------------------
-
 baseLayers = {
     "Satellite": satelliteLayer,
     "Plan": planLayer,
@@ -51,6 +46,8 @@ overlays = {
 L.control.layers(baseLayers, overlays).addTo(map);
 L.control.scale({imperial: false, metric: true}).addTo(map);
 map.attributionControl.setPrefix(false);
+
+map.setView(centeredLocation, zoomLevel);
 
 var userIcon = L.icon({
     iconUrl: "../css/images/home_blue.svg",
@@ -140,6 +137,7 @@ ros1.on('connection', function() {
 });
 
 ros1.on('error', function(error) {
+    $('#satellite1Connection').addClass('visually-hidden')
     if (selectedSatellite == 1) {
         Swal.fire({
             icon: 'error',
@@ -154,6 +152,7 @@ ros3.on('connection', function() {
 });
 
 ros3.on('error', function(error) {
+    $('#satellite3Connection').addClass('visually-hidden')
     if (selectedSatellite == 3) {
         Swal.fire({
             icon: 'error',
@@ -168,6 +167,7 @@ ros4.on('connection', function() {
 });
 
 ros4.on('error', function(error) {
+    $('#satellite4Connection').addClass('visually-hidden')
     if (selectedSatellite == 4) {
         Swal.fire({
             icon: 'error',
@@ -218,23 +218,42 @@ var gpsListenerSat4 = new ROSLIB.Topic({
     messageType : 'geographic_msgs/GeoPoseStamped'
 });
 
+var missionContextListenerSat1 = new ROSLIB.Topic({
+    ros : ros1,
+    name : 'mission/mission_context',
+    messageType : 'navigation_msgs/MissionContext'
+});
+
+var missionContextListenerSat3 = new ROSLIB.Topic({
+    ros : ros3,
+    name : 'mission/mission_context',
+    messageType : 'navigation_msgs/MissionContext'
+});
+
+var missionContextListenerSat4 = new ROSLIB.Topic({
+    ros : ros4,
+    name : 'mission/mission_context',
+    messageType : 'navigation_msgs/MissionContext'
+});
+
 var i0 = 0;
 gpsListenerUser.subscribe(function(message) {
     userPos.lat = message.latitude;
     userPos.lng = message.longitude;
     if (mapSetted) {
-        if(i0 == 0)
-        {
-            userMarker.addTo(map).bindPopup("Vous êtes ici");
-            if (selectedSatellite == 0) {
-                map.panTo([userPos.lat, userPos.lng]);
-            }
-        }
         if(i0 % cycleNumber == 0)
         {
+            userMarker.addTo(map).bindPopup("Vous êtes ici");
             userMarker.setLatLng([userPos.lat, userPos.lng]);
         }
         i0++;
+    }
+    else
+    {
+        if (selectedSatellite == 0) {
+            map.setView([userPos.lat, userPos.lng], zoomLevel);
+            mapSetted = true;
+        }
     }
 });
 
@@ -243,10 +262,9 @@ compassListenerSat1.subscribe(function(message) {
     let qx = message.orientation.x;
     let qy = message.orientation.y;
     let qz = message.orientation.z;
-    satellite1Pos.hea = 90.0-180.0*Math.atan2(2.0*(qw*qz+qx+qy), 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
+    satellite1Pos.hea = -180.0*Math.atan2(2.0*(qw*qz+qx+qy), 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
     satellite1Marker.setRotationAngle(satellite1Pos.hea/2.0);
     if (selectedSatellite == 1) {
-        console.log(satellite1Pos.hea);
         refreshCompass(satellite1Pos.hea);
     }
 })
@@ -255,18 +273,19 @@ gpsListenerSat1.subscribe(function(message) {
     satellite1Pos.lat = message.latitude;
     satellite1Pos.lng = message.longitude;
     if (mapSetted) {
-        if(i1 == 0)
-        {
-            satellite1Marker.addTo(map).bindPopup("Satellite 1");
-            if (selectedSatellite == 1) {
-                map.panTo([satellite1Pos.lat, satellite1Pos.lng]);
-            }
-        }
         if(i1 % cycleNumber == 0)
         {
+            satellite1Marker.addTo(map).bindPopup("Satellite 1");
             satellite1Marker.setLatLng([satellite1Pos.lat, satellite1Pos.lng]);
         }
         i1++;
+    }
+    else
+    {
+        if (selectedSatellite == 1) {
+            map.setView([satellite1Pos.lat, satellite1Pos.lng], zoomLevel);
+            mapSetted = true;
+        }
     }
 });
 
@@ -287,24 +306,29 @@ gpsListenerSat3.subscribe(function(message) {
     satellite3Pos.lat = message.pose.position.latitude;
     satellite3Pos.lng = message.pose.position.longitude;
     if (mapSetted) {
-        if(i3 == 0)
-        {
-            satellite3Marker.addTo(map).bindPopup("Satellite 3");
-            if (selectedSatellite == 3) {
-                map.panTo([satellite3Pos.lat, satellite3Pos.lng]);
-            }
-        }
         if(i3 % cycleNumber == 0)
         {
+            satellite3Marker.addTo(map).bindPopup("Satellite 3");
             satellite3Marker.setLatLng([satellite3Pos.lat, satellite3Pos.lng]);
         }
         i3++;
     }
+    else
+    {
+        if (selectedSatellite == 3) {
+            map.setView([satellite3Pos.lat, satellite3Pos.lng], zoomLevel);
+            mapSetted = true;
+        }
+    }
 });
 
 compassListenerSat4.subscribe(function(message) {
-    satellite4Pos.hea = message.true_heading;
-    satellite4Marker.setRotationAngle(satellite4Pos.hea / 2);
+    let qw = message.orientation.w;
+    let qx = message.orientation.x;
+    let qy = message.orientation.y;
+    let qz = message.orientation.z;
+    satellite4Pos.hea = 180.0*Math.atan2(2.0*qw*qz+qx+qy, 1.0-2.0*(qy*qy+qz*qz))/Math.PI;
+    satellite4Marker.setRotationAngle(satellite4Pos.hea/2.0);
     if (selectedSatellite == 4) {
         refreshCompass(satellite4Pos.hea);
     }
@@ -314,17 +338,115 @@ gpsListenerSat4.subscribe(function(message) {
     satellite4Pos.lat = message.pose.position.latitude;
     satellite4Pos.lng = message.pose.position.longitude;
     if (mapSetted) {
-        if(i4 == 0)
-        {
-            satellite4Marker.addTo(map).bindPopup("Satellite 4");
-            if (selectedSatellite == 4) {
-                map.panTo([satellite4Pos.lat, satellite4Pos.lng]);
-            }
-        }
         if(i4 % cycleNumber == 0)
         {
+            satellite4Marker.addTo(map).bindPopup("Satellite 4");
             satellite4Marker.setLatLng([satellite4Pos.lat, satellite4Pos.lng]);
         }
         i4++;
     }
+    else
+    {
+        if (selectedSatellite == 4) {
+            map.setView([satellite4Pos.lat, satellite4Pos.lng], zoomLevel);
+            mapSetted = true;
+        }
+    }
 });
+
+missionContextListenerSat1.subscribe(function(message) {
+    detectedStrategicPointListSat1 = [];
+    message.strategic_points.forEach(p => {
+        detectedStrategicPointListSat1.push({
+            "id": p.id,
+            "latitude": p.position.latitude,
+            "longitude": p.position.longitude,
+            "type": p.type,
+            "state": p.status,
+            "radius": p.radius,
+            "message": p.message
+        });
+    });
+    updateDetectedStrategicPointList(detectedStrategicPointListSat1);
+});
+
+missionContextListenerSat3.subscribe(function(message) {
+    detectedStrategicPointListSat3 = [];
+    message.strategic_points.forEach(p => {
+        detectedStrategicPointListSat3.push({
+            "id": p.id,
+            "latitude": p.position.latitude,
+            "longitude": p.position.longitude,
+            "type": p.type,
+            "state": p.status,
+            "radius": p.radius,
+            "message": p.message
+        });
+    });
+    updateDetectedStrategicPointList(detectedStrategicPointListSat3);
+});
+
+missionContextListenerSat4.subscribe(function(message) {
+    detectedStrategicPointListSat4 = [];
+    message.strategic_points.forEach(p => {
+        detectedStrategicPointListSat4.push({
+            "id": p.id,
+            "latitude": p.position.latitude,
+            "longitude": p.position.longitude,
+            "type": p.type,
+            "state": p.status,
+            "radius": p.radius,
+            "message": p.message
+        });
+    });
+    updateDetectedStrategicPointList(detectedStrategicPointListSat4);
+});
+
+var updateDetectedStrategicPointList = function (strategicPoints) {
+    strategicPoints.forEach(element => {
+        if (element.marker) {
+            element.marker.removeFrom(map);
+            element.circle.removeFrom(map);
+        }
+    });
+
+    let color = {0: "green", 1: "orange", 2: "red"};
+    let type = {0: "unknown", 1: "hybrid", 2: "ground", 3: "aerial"};
+    
+    strategicPoints.forEach(p => {
+        let trapIcon = L.icon({
+            iconUrl: "../css/images/"+type[p.type]+"_trap_"+color[p.state]+".svg",
+            iconSize:     [30, 30],
+            iconAnchor:   [15, 15],
+            popupAnchor:  [0, 0]
+        });
+        if (!p.marker) {
+            var circle = new L.circle([p.latitude, p.longitude], {
+                color: color[p.state],
+                radius: p.radius,
+            });
+            var marker = new L.marker([p.latitude, p.longitude], {
+                icon: trapIcon,
+            });
+            p.circle = circle;
+            p.marker = marker;
+
+            p.marker.on('click', function (event) {
+                $('.listItem.active').removeClass("active");
+                $('#'+p.id).addClass("active");
+            });
+        }
+        p.marker.addTo(map).bindPopup(p.message);
+        p.circle.addTo(map);
+    });
+    currStrategicPointID = strategicPoints.length + 1;
+
+    $("#detectedStrategicPointListGroup").empty();
+    strategicPoints.forEach(element => {
+        let bootstrapColor = {0: 'success', 1: 'warning', 2: 'danger'};
+        let color = {0: "green", 1: "orange", 2: "red"};
+        let type = {0: "unknown", 1: "hybrid", 2: "ground", 3: "aerial"};
+        let strategicPointText = {3: 'Menace aérienne', 1: 'Menace hybride', 2: 'Menace terrestre'};
+        $("#detectedStrategicPointListGroup").append('<li class="list-group-item list-group-item-'+bootstrapColor[element.state]+' listItem p-2" id="'+element.id+'">\n<div class="d-flex">\n<img class="align-self-center" src="../css/images/'+type[element.type]+'_trap_'+color[element.state]+'.svg" height="22"></img>\n<p class="text flex-grow-1 my-0 align-self-center text-center" id="'+element.id+'-text">'+strategicPointText[element.type]+'</p></div></li>');
+    });
+}

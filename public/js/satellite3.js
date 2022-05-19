@@ -15,7 +15,6 @@ var addingCoverageArea = false;
 var coverageAreaList = [];
 var addingStrategicPoint = false;
 var strategicPointList = [];
-var detectedStrategicPointList = [];
 var strategicPointType = 'hybrid';
 var strategicPointState = 1;
 var state = new String;
@@ -31,7 +30,7 @@ socket.on("currentMode", function(currentMode) {
     mode = currentMode;
     $('#'+mode+'ModeBtn:input').prop("checked", true);
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
 });
 
 socket.emit("getWaypointList");
@@ -82,13 +81,13 @@ stateListener.subscribe(function(message) {
 
     switch (droneState) {
         case "HOVERING":
-            $('#takeOffCollapse').collapse('hide');
-            $('#landCollapse').collapse('show');
+            $('#takeOffCollapse').removeClass("show");
+            $('#landCollapse').addClass("show");
             $("#landBtn").removeClass("disabled")
             break;
         case "LANDED":
-            $('#takeOffCollapse').collapse('show');
-            $('#landCollapse').collapse('hide');
+            $('#takeOffCollapse').addClass("show");
+            $('#landCollapse').removeClass("show");
             $("#takeOffBtn").removeClass("disabled")
             break;
         case "LANDING":
@@ -114,7 +113,7 @@ $('#displayCameraBtn:input').change(function () {
     if (cameraDisplay)
     {
         $('#displayCameraLabel').removeClass('active');
-        $('#displayCameraCollapse').collapse('hide');
+        $('#displayCameraCollapse').removeClass("show");
         videoStreamListener.unsubscribe();
         telemetryListenerList.pop(telemetryListenerList.indexOf(videoStreamListener));
         cameraDisplay = false;
@@ -122,7 +121,7 @@ $('#displayCameraBtn:input').change(function () {
     else
     {
         $('#displayCameraLabel').addClass('active');
-        $('#displayCameraCollapse').collapse('show');
+        $('#displayCameraCollapse').addClass("show");
         videoStreamListener.subscribe(function(message) {
             document.getElementById('videoStreamImg').src = "data:image/jpg;base64," + message.data;
         });
@@ -141,31 +140,6 @@ batteryListener.subscribe(function(message) {
     $('#battery').css('width', message.data+'%').attr('aria-valuenow', message.data);
 });
 telemetryListenerList.push(batteryListener);
-
-var missionContextListener = new ROSLIB.Topic({
-    ros : ros3,
-    name : 'mission/mission_context',
-    messageType : 'navigation_msgs/MissionContext'
-});
-
-missionContextListener.subscribe(function(message) {
-    detectedStrategicPointList = [];
-    console.log("Hello");
-    message.strategic_points.forEach(p => {
-        detectedStrategicPointList.push({
-            "id": p.id,
-            "latitude": p.position.latitude,
-            "longitude": p.position.longitude,
-            "type": p.type,
-            "state": p.status,
-            "radius": p.radius,
-            "message": p.message
-        });
-        currStrategicPointID++;
-    });
-    updateDetectedStrategicPointList(detectedStrategicPointList);
-});
-telemetryListenerList.push(missionContextListener);
 
 // Services
 
@@ -227,56 +201,56 @@ var returnHomeClient = new ROSLIB.Service({
 
 $('#navigationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'navigation';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     unsubscribeTelemetryListener();
     sendMode(mode);
 })
 
 $('#explorationModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'exploration';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     unsubscribeTelemetryListener();
     sendMode(mode);
 })
 
 $('#tasksModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'tasks';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     unsubscribeTelemetryListener();
     sendMode(mode);
 })
 
 $('#telemetryModeBtn:input').change(function () {
     $('#'+mode+'ModeLabel').removeClass('active');
-    $('#'+mode+'ModeCollapse').collapse('hide');
+    $('#'+mode+'ModeCollapse').removeClass("show");
     mode = 'telemetry';
     $('#'+mode+'ModeLabel').addClass('active');
-    $('#'+mode+'ModeCollapse').collapse('show');
+    $('#'+mode+'ModeCollapse').addClass("show");
     sendMode(mode);
 })
 
 // Navigation
 
 $("#addingWaypointBtn").click(function (event) {
-    $('#addingWaypointCollapse').collapse('hide');
-    $('#addingWaypointCancelCollapse').collapse('show');
+    $('#addingWaypointCollapse').removeClass("show");
+    $('#addingWaypointCancelCollapse').addClass("show");
     addingWaypoint = true;
     $('.swapWaypointBtn.invisible').removeClass('invisible');
     $('.removeWaypointBtn.invisible').removeClass('invisible');
 });
 
 $('#addWaypointCancel').click(function (event) {
-    $('#addingWaypointCancelCollapse').collapse('hide');
-    $('#addingWaypointCollapse').collapse('show');
+    $('#addingWaypointCancelCollapse').removeClass("show");
+    $('#addingWaypointCollapse').addClass("show");
     addingWaypoint = false;
     $('.swapWaypointBtn').addClass('invisible');
     $('.removeWaypointBtn').addClass('invisible');
@@ -358,11 +332,11 @@ $("#submitWaypointList").click(function (event) {
 
     pushMissionClient.callService(request, function(result) {
         if (result.success){
-            sendWaypoint(waypointList);
+            missionLaunched = false;
             $('#launchMissionBtn').removeClass('disabled');
             $('#abortMissionBtn').addClass('disabled');
-            $('#submitMissionCollapse').collapse('hide');
-            $('#launchMissionCollapse').collapse('show');
+            $('#submitMissionCollapse').removeClass("show");
+            $('#launchMissionCollapse').addClass("show");
         };
     });
 });
@@ -523,8 +497,8 @@ var updateWaypointList = function (waypoints) {
 
     $(".removeWaypointBtn").click(removeWaypoint);
 
-    $('#submitMissionCollapse').collapse('show');
-    $('#launchMissionCollapse').collapse('hide');
+    $('#submitMissionCollapse').addClass("show");
+    $('#launchMissionCollapse').removeClass("show");
     $('#launchMissionBtn').addClass('disabled');
 }
 
@@ -568,15 +542,15 @@ $("#submitCoverageArea").click(function (event) {
 });
 
 $("#addingCoverageAreaBtn").click(function (event) {
-    $('#addingCoverageAreaCollapse').collapse('hide');
-    $('#addingCoverageAreaCancelCollapse').collapse('show');
+    $('#addingCoverageAreaCollapse').removeClass("show");
+    $('#addingCoverageAreaCancelCollapse').addClass("show");
     addingCoverageArea = true;
     $('.removeCoverageAreaBtn').removeClass('invisible');
 });
 
 $('#addCoverageAreaCancel').click(function (event) {
-    $('#addingCoverageAreaCancelCollapse').collapse('hide');
-    $('#addingCoverageAreaCollapse').collapse('show');
+    $('#addingCoverageAreaCancelCollapse').removeClass("show");
+    $('#addingCoverageAreaCollapse').addClass("show");
     addingCoverageArea = false;
     $('.removeCoverageAreaBtn').addClass('invisible');
 });
@@ -713,15 +687,15 @@ $("#submitStrategicPointList").click(function (event) {
 });
 
 $("#addingStrategicPointBtn").click(function (event) {
-    $('#addingStrategicPointCollapse').collapse('hide');
-    $('#addingStrategicPointCancelCollapse').collapse('show');
+    $('#addingStrategicPointCollapse').removeClass("show");
+    $('#addingStrategicPointCancelCollapse').addClass("show");
     addingStrategicPoint = true;
     $('.removeStrategicPointBtn').removeClass('invisible');
 });
 
 $('#addStrategicPointCancel').click(function (event) {
-    $('#addingStrategicPointCancelCollapse').collapse('hide');
-    $('#addingStrategicPointCollapse').collapse('show');
+    $('#addingStrategicPointCancelCollapse').removeClass("show");
+    $('#addingStrategicPointCollapse').addClass("show");
     addingStrategicPoint = false;
     $('.removeStrategicPointBtn').addClass('invisible');
 });
@@ -804,57 +778,6 @@ var updateStrategicPointList = function (strategicPoints) {
     }
 
     $(".removeStrategicPointBtn").click(removeStrategicPoint);
-}
-
-var updateDetectedStrategicPointList = function (strategicPoints) {
-    strategicPoints.forEach(element => {
-        if (element.marker) {
-            element.marker.removeFrom(map);
-            element.circle.removeFrom(map);
-        }
-    });
-    strategicPointList = [];
-
-    let color = {0: "green", 1: "orange", 2: "red"};
-    let type = {0: "unknown", 1: "hybrid", 2: "ground", 3: "aerial"};
-    
-    strategicPoints.forEach(p => {
-        let trapIcon = L.icon({
-            iconUrl: "../css/images/"+type[p.type]+"_trap_"+color[p.state]+".svg",
-            iconSize:     [30, 30],
-            iconAnchor:   [15, 15],
-            popupAnchor:  [0, 0]
-        });
-        if (!p.marker) {
-            var circle = new L.circle([p.latitude, p.longitude], {
-                color: color[p.state],
-                radius: p.radius
-            });
-            var marker = new L.marker([p.latitude, p.longitude], {
-                icon: trapIcon,
-            });
-            p.circle = circle;
-            p.marker = marker;
-
-            p.marker.on('click', function (event) {
-                $('.listItem.active').removeClass("active");
-                $('#'+p.id).addClass("active");
-            });
-        }
-        p.marker.addTo(map).bindPopup(p.message);
-        p.circle.addTo(map);
-        strategicPointList.push(p);
-    });
-    currStrategicPointID = strategicPoints.length + 1;
-
-    $("#strategicPointListGroup").empty();
-    strategicPointList.forEach(element => {
-        let bootstrapColor = {0: 'success', 1: 'warning', 2: 'danger'};
-        let color = {0: "green", 1: "orange", 2: "red"};
-        let type = {0: "unknown", 1: "hybrid", 2: "ground", 3: "aerial"};
-        let strategicPointText = {3: 'Menace aérienne', 1: 'Menace hybride', 2: 'Menace terrestre'};
-        $("#strategicPointListGroup").append('<li class="list-group-item list-group-item-'+bootstrapColor[element.state]+' listItem p-2" id="'+element.id+'">\n<div class="d-flex">\n<img class="align-self-center" src="../css/images/'+type[element.type]+'_trap_'+color[element.state]+'.svg" height="22"></img>\n<p class="text flex-grow-1 my-0 align-self-center text-center" id="'+element.id+'-text">'+strategicPointText[element.type]+'</p>\n<button class="btn invisible removeStrategicPointBtn" type="button"><img src="../css/images/x.svg"></img></button></div></li>');
-    });
 }
 
 var removeStrategicPoint = function (event) {
