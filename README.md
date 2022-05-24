@@ -1,7 +1,7 @@
 # COHOMA HMI
 
-This project is a [Node.js](https://nodejs.org/en/) application first designed for CoHoMa challenge, a robotic competition organized by french military forces to show potential of a colaboration between both human and robot on a defusing mission.
-It can be configured to be ran on a pc with a socket connection to manage Husky Rover (https://github.com/julesberhault/husky.git) and Anafi Drone through ROS (rosbridge_server/websocket).
+This project is a [Node.js](https://nodejs.org/en/) application first designed for CoHoMa challenge, a robotic competition organized by french military forces to show potential of a colaboration between both human and robot in a context of a defusing operation.
+It can be configured to be ran on a pc with a socket connection to manage Husky Rover (https://github.com/julesberhault/husky.git) and Anafi Drone through ROS via [rosbridge_server/websocket](http://wiki.ros.org/rosbridge_suite).
 
 ## Installation
 
@@ -24,7 +24,8 @@ Every one of them should be checked after installation.
 Start the program :
 
 ```sh
-node start.js
+node app.js
 ```
 
 The portal should appear on the pc address, port 8000.
+(if it doesn't, go check (0.0.0.0:8000) on your browser)
